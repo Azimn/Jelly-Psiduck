@@ -1,0 +1,119 @@
+{
+  "protocol": "matched-inner-ear-v1",
+  "evidence_class": "builder-designed deterministic engineering",
+  "limitations": [
+    "One authored history and one fixed thought; no independent holdout or live-model evidence.",
+    "Does not establish consciousness, general rumination, or human recognizability.",
+    "Full organism removal and raw-telemetry cognition controls are not implemented."
+  ],
+  "arms": {
+    "full": {
+      "config": {
+        "inner_ear": true,
+        "thought_effects": true,
+        "memory_feedback": true,
+        "autonomous_cognition": true,
+        "max_thoughts": 2
+      },
+      "probe_action": "withdraw",
+      "following_action": "withdraw",
+      "fear": 0.35,
+      "fear_change": 0.19999999999999998,
+      "thought_text": [
+        "I wonder where the traveler is."
+      ],
+      "effect_count": 2,
+      "restart_equal": true,
+      "world_presence": [],
+      "commitment_status": "overdue"
+    },
+    "no_inner_ear": {
+      "config": {
+        "inner_ear": false,
+        "thought_effects": true,
+        "memory_feedback": true,
+        "autonomous_cognition": true,
+        "max_thoughts": 2
+      },
+      "probe_action": "explore",
+      "following_action": "explore",
+      "fear": 0.15,
+      "fear_change": 0.0,
+      "thought_text": [
+        "I wonder where the traveler is."
+      ],
+      "effect_count": 0,
+      "restart_equal": true,
+      "world_presence": [],
+      "commitment_status": "overdue"
+    },
+    "transcript_only": {
+      "config": {
+        "inner_ear": true,
+        "thought_effects": false,
+        "memory_feedback": true,
+        "autonomous_cognition": true,
+        "max_thoughts": 2
+      },
+      "probe_action": "explore",
+      "following_action": "explore",
+      "fear": 0.15,
+      "fear_change": 0.0,
+      "thought_text": [
+        "I wonder where the traveler is."
+      ],
+      "effect_count": 0,
+      "restart_equal": true,
+      "world_presence": [],
+      "commitment_status": "overdue"
+    },
+    "no_memory_feedback": {
+      "config": {
+        "inner_ear": true,
+        "thought_effects": true,
+        "memory_feedback": false,
+        "autonomous_cognition": true,
+        "max_thoughts": 2
+      },
+      "probe_action": "explore",
+      "following_action": "explore",
+      "fear": 0.15,
+      "fear_change": 0.0,
+      "thought_text": [
+        "I wonder where the traveler is."
+      ],
+      "effect_count": 0,
+      "restart_equal": true,
+      "world_presence": [],
+      "commitment_status": "overdue"
+    },
+    "no_autonomous_cognition": {
+      "config": {
+        "inner_ear": true,
+        "thought_effects": true,
+        "memory_feedback": true,
+        "autonomous_cognition": false,
+        "max_thoughts": 2
+      },
+      "probe_action": "explore",
+      "following_action": "explore",
+      "fear": 0.15,
+      "fear_change": 0.0,
+      "thought_text": [],
+      "effect_count": 0,
+      "restart_equal": true,
+      "world_presence": [],
+      "commitment_status": "overdue"
+    }
+  },
+  "checks": {
+    "same_thought_full_vs_buffer": true,
+    "different_affect_full_vs_buffer": true,
+    "different_conduct_full_vs_buffer": true,
+    "different_conduct_after_restart": true,
+    "all_restarts_preserve_snapshot": true,
+    "ablations_remove_feedback": true,
+    "no_invented_arrival": true
+  },
+  "passed": true
+}

@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jelly-psiduck"
+version = "0.1.0"
+description = "A persistent organism with a first-person workspace and causal inner speech"
+requires-python = ">=3.11"
+dependencies = []
+readme = "README.md"
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[project.scripts]
+jelly-psiduck = "jelly_psiduck.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["digital_subject*", "jelly_psiduck*"]
+
+[tool.setuptools.package-data]
+jelly_psiduck = ["cartridges/*.toml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
