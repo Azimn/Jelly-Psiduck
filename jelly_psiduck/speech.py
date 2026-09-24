@@ -122,6 +122,8 @@ class OpenAICompatibleSpeechRenderer:
             "prompt_contract": SPEECH_PROMPT_VERSION,
             "parser_version": MODEL_RESPONSE_PARSER_VERSION,
             "raw_content": None,
+            "response_model": None,
+            "system_fingerprint": None,
             "parse_mode": None,
             "output_text": None,
             "error_type": None,
@@ -142,6 +144,8 @@ class OpenAICompatibleSpeechRenderer:
             if len(payload) > 131072:
                 raise ValueError("model response too large")
             result = json.loads(payload)
+            call["response_model"] = result.get("model")
+            call["system_fingerprint"] = result.get("system_fingerprint")
             content = result["choices"][0]["message"]["content"]
             call["raw_content"] = content
             text, mode = parse_text_json(content, max_chars=4000)

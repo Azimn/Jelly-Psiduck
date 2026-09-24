@@ -50,11 +50,27 @@ without changing the generic v0.2 UUID behavior.
 Changing these Pretorius resource limits or dynamic memory and continuity identity
 rules after the first accepted result requires a new protocol version.
 
+The 512-memory cap is intentionally bounded and uses the donor engine's score-based
+retention policy. V1 is short enough that this is not an endurance intervention.
+The release candidate does not yet implement long-horizon consolidation,
+hierarchical summarization, or protected archival retention. Those mechanisms must
+be evaluated separately rather than inferred from this short protocol.
+
 ## Model and response contracts
 
 The same model must render both private cognition and public wording within one run.
-The evidence records the exact model name, an immutable build or model fingerprint, the package version, and a SHA-256 fingerprint of the critical implementation modules.
-Endpoint URLs and API keys are never written to evidence.
+The evidence records the requested model name, an immutable user-supplied build or
+model fingerprint, any provider-reported model name and system fingerprint, the
+Python runtime environment, the cartridge digest, the package version, and a SHA-256
+manifest covering all Python source in `jelly_psiduck` and `digital_subject` plus
+the Pretorius cartridge. Endpoint URLs and API keys are never written to evidence.
+
+The model fingerprint supplied on the command line is an experimental provenance
+label, not a cryptographic attestation by the provider. When the backend returns its
+own model or system fingerprint, that metadata is retained separately. Provider
+sampling is not assumed deterministic. Exact replay verifies the causal consequences
+of the captured outputs, not the ability to regenerate the same sampled text from
+the provider.
 
 Private cognition without the identity preamble uses
 `private-thought-json-v1`, temperature 0.4, and a 220-token ceiling. The identity

@@ -18,7 +18,8 @@ interaction. No actual live-model efficacy or human-likeness result is claimed b
 this release candidate.
 
 Alpha Pretorius subject stores are not silently migrated. RC trials require fresh
-schema-4 databases.
+schema-4 databases. The current 512-memory budget is sufficient for the short frozen
+protocol but does not solve long-horizon consolidation or archival retention.
 
 See `research/PRETORIUS_LIVE_PROTOCOL_V1.md` and
 `docs/RELEASE_CANDIDATE.md`.

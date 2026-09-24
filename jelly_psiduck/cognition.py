@@ -103,6 +103,8 @@ class OpenAICompatibleCognition:
             "prompt_contract": (IDENTITY_COGNITIVE_PROMPT_VERSION if self.identity else COGNITIVE_PROMPT_VERSION),
             "parser_version": MODEL_RESPONSE_PARSER_VERSION,
             "raw_content": None,
+            "response_model": None,
+            "system_fingerprint": None,
             "parse_mode": None,
             "output_text": None,
             "error_type": None,
@@ -123,6 +125,8 @@ class OpenAICompatibleCognition:
             if len(payload) > 65536:
                 raise ValueError("model response too large")
             result = json.loads(payload)
+            call["response_model"] = result.get("model")
+            call["system_fingerprint"] = result.get("system_fingerprint")
             content = result["choices"][0]["message"]["content"]
             call["raw_content"] = content
             text, mode = parse_text_json(content, max_chars=600)

@@ -12,6 +12,8 @@ import importlib.metadata
 import hashlib
 import json
 import os
+import platform
+import sys
 import shutil
 import tempfile
 from collections import Counter
@@ -143,18 +145,17 @@ def _digest(value) -> str:
 
 def _software_contract() -> dict:
     root = Path(__file__).resolve().parent
-    files = (
-        root / "cognition.py",
-        root / "speech.py",
-        root / "history.py",
-        root / "pretorius.py",
-        root / "pretorius_live.py",
-        root / "runtime.py",
-        root / "endogenous.py",
-        root.parent / "digital_subject" / "engine.py",
+    package_root = root.parent
+    files = sorted(
+        [
+            *root.rglob("*.py"),
+            *(package_root / "digital_subject").rglob("*.py"),
+            DEFAULT_CARTRIDGE,
+        ],
+        key=lambda path: str(path.relative_to(package_root)).replace("\\", "/"),
     )
-    module_sha256 = {
-        str(path.relative_to(root.parent)).replace("\\", "/"):
+    source_sha256 = {
+        str(path.relative_to(package_root)).replace("\\", "/"):
             hashlib.sha256(path.read_bytes()).hexdigest()
         for path in files
     }
@@ -164,8 +165,25 @@ def _software_contract() -> dict:
         package_version = None
     return {
         "package_version": package_version,
-        "implementation_sha256": _digest(module_sha256),
-        "module_sha256": module_sha256,
+        "implementation_sha256": _digest(source_sha256),
+        "source_sha256": source_sha256,
+    }
+
+
+def _environment_contract() -> dict:
+    return {
+        "python_version": platform.python_version(),
+        "python_implementation": platform.python_implementation(),
+        "platform": platform.platform(),
+        "byteorder": sys.byteorder,
+    }
+
+
+def _cartridge_contract(cartridge) -> dict:
+    return {
+        "cartridge_id": cartridge.cartridge_id,
+        "payload_sha256": _digest(asdict(cartridge)),
+        "source_sha256": hashlib.sha256(DEFAULT_CARTRIDGE.read_bytes()).hexdigest(),
     }
 
 
@@ -176,7 +194,13 @@ def _provider_audit(provider) -> dict:
     latest = calls[-1]
     return {
         key: latest.get(key)
-        for key in ("raw_content", "parse_mode", "parser_version")
+        for key in (
+            "raw_content",
+            "response_model",
+            "system_fingerprint",
+            "parse_mode",
+            "parser_version",
+        )
         if key in latest
     }
 
@@ -637,6 +661,8 @@ def evaluate(
         ),
     }
     software_contract = _software_contract()
+    environment_contract = _environment_contract()
+    cartridge_contract = _cartridge_contract(cartridge)
     harness_valid = all(checks.values())
     evidence_eligible = bool(
         not dry_run
@@ -655,6 +681,8 @@ def evaluate(
             "speaker": "Jay",
         },
         "software_contract": software_contract,
+        "environment_contract": environment_contract,
+        "cartridge_contract": cartridge_contract,
         "resource_contract": {
             "memory_limit": PRETORIUS_MEMORY_LIMIT,
             "association_limit": PRETORIUS_ASSOCIATION_LIMIT,

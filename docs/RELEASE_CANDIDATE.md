@@ -62,3 +62,16 @@ release candidate is defined.
 Stable Pretorius continuity IDs are generated at creation for records, expectations,
 commitments and reflection insights. They are not rewritten after the turn. Generic
 v0.2 continuity retains its UUID behavior.
+
+## Known release-candidate limits
+
+The 512-memory budget is sufficient for the frozen short live protocol but is not a
+complete long-life memory system. When capacity is exceeded, the donor engine keeps
+higher-scoring memories and discards lower-scoring ones. There is not yet a
+consolidation layer, hierarchical autobiographical summary, or protected archive for
+old but identity-defining events.
+
+The live evidence manifest now fingerprints all Python implementation files in both
+runtime packages, the Pretorius cartridge, the Python environment, the cartridge
+payload, and provider-reported model metadata when available. The user-supplied model
+fingerprint remains a provenance label rather than provider attestation.
