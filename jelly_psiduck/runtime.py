@@ -73,7 +73,6 @@ class UnifiedSubject:
         self.noticed = {}
         self.trace = []
         self.attention = ()
-        self.history_imports = {}
         self.last_clock = None
         self.clock_remainder = 0.0
         with closing(self._connect()) as db:
@@ -92,7 +91,6 @@ class UnifiedSubject:
                 "continuity": self.continuity.state.to_dict(), "workspace": self.workspace.to_dict(),
                 "pending": self.pending, "cooldowns": self.cooldowns, "noticed": self.noticed,
                 "trace": self.trace, "attention": self.attention,
-                "history_imports": self.history_imports,
                 "last_clock": self.last_clock, "clock_remainder": self.clock_remainder}
 
     def _restore(self, raw):
@@ -107,7 +105,6 @@ class UnifiedSubject:
         self.noticed = raw["noticed"]
         self.trace = raw["trace"]
         self.attention = tuple(raw["attention"])
-        self.history_imports = dict(raw.get("history_imports", {}))
         self.last_clock = raw["last_clock"]
         self.clock_remainder = raw["clock_remainder"]
 
