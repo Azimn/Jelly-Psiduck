@@ -466,6 +466,7 @@ def _trial(
 
     replay_equal = None
     replay_error = None
+    replay_diagnostics = None
     if clean:
         replay_cognition = ReplayStudyCognition(cognition.calls, identity)
         replay_renderer = ReplayStudyRenderer(
@@ -480,13 +481,23 @@ def _trial(
             subject_id="pretorius-001",
         )
         replay_turns = _run_script(replay)
+        replay_snapshot = replay.inspect()
+        turns_equal = turns == replay_turns
+        section_equal = {
+            key: final_snapshot.get(key) == replay_snapshot.get(key)
+            for key in sorted(set(final_snapshot) | set(replay_snapshot))
+        }
+        replay_diagnostics = {
+            "turns_equal": turns_equal,
+            "state_equal": all(section_equal.values()),
+            "state_sections_equal": section_equal,
+        }
         try:
             replay_cognition.assert_consumed()
             replay_renderer.assert_consumed()
-            replay_equal = (
-                turns == replay_turns
-                and final_snapshot == replay.inspect()
-            )
+            replay_equal = turns_equal and replay_diagnostics["state_equal"]
+            if not replay_equal:
+                replay_error = "recorded outputs did not reproduce the complete trajectory and state"
         except ReplayMismatch as exc:
             replay_equal = False
             replay_error = str(exc)
@@ -525,6 +536,7 @@ def _trial(
         "clean": clean,
         "replay_equal": replay_equal,
         "replay_error": replay_error,
+        "replay_diagnostics": replay_diagnostics,
         "final_state_sha256": _digest(final_snapshot),
     }
 

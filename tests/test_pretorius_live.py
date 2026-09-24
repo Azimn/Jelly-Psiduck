@@ -12,7 +12,15 @@ def test_pretorius_live_dry_run_is_replayable_and_not_evidence():
     assert report["checks"]["history_contract_pinned"]
     assert report["checks"]["history_arms_have_no_workspace_orientation"]
     assert report["checks"]["public_views_exclude_subject_id"]
-    assert report["checks"]["clean_trials_replay_exactly"]
+    assert report["checks"]["clean_trials_replay_exactly"], [
+        {
+            "condition": trial["condition"],
+            "error": trial["replay_error"],
+            "diagnostics": trial["replay_diagnostics"],
+        }
+        for trial in report["trials"]
+        if trial["clean"] and trial["replay_equal"] is not True
+    ]
     assert report["harness_valid"]
     assert report["evidence_eligible"] is False
 
