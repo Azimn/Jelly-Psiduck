@@ -71,8 +71,8 @@ def run_evaluation():
         links = _historical_links(after)
         control_links = _historical_links(control_after)
         checks = {
-            "typed_history_imported": import_report["memory_count"] == 34,
-            "relationships_imported": import_report["relationship_count"] == 4,
+            "typed_history_imported": import_report["memory_count"] == 57,
+            "relationships_imported": import_report["relationship_count"] == 5,
             "jay_history_retrieved": bool(links),
             "control_has_no_seeded_history": not control_links,
             "history_changes_conduct": full_result["action"] != control_result["action"],
