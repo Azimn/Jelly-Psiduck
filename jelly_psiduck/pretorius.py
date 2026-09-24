@@ -20,6 +20,23 @@ DEFAULT_CARTRIDGE = ROOT / "cartridges" / "pretorius.toml"
 DEFAULT_HISTORY = ROOT / "histories" / "pretorius_v1.json"
 
 
+class PretoriusSubject(EndogenousSubject):
+    """Pretorius-only persistence envelope around the frozen v0.2 organism."""
+
+    SCHEMA = 3
+
+    def __init__(self, *args, **kwargs):
+        self.history_imports = {}
+        super().__init__(*args, **kwargs)
+
+    def _payload(self):
+        return {**super()._payload(), "history_imports": self.history_imports}
+
+    def _restore(self, raw):
+        super()._restore(raw)
+        self.history_imports = dict(raw.get("history_imports", {}))
+
+
 def open_pretorius(
     db: str | Path,
     *,
@@ -42,7 +59,7 @@ def open_pretorius(
         )
         if model_speech:
             renderer = OpenAICompatibleSpeechRenderer(endpoint, model, api_key)
-    host = EndogenousSubject(
+    host = PretoriusSubject(
         db,
         cartridge,
         cognition=cognition,
