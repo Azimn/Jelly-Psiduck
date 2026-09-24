@@ -30,10 +30,17 @@ using importer `typed-prehistory-v2`. Workspace orientation is disabled. Provena
 classes remain in `Memory.kind` but are excluded from associative tags. This prevents
 source labels such as `lived_project_history` from becoming artificial retrieval cues.
 
+The Pretorius RC uses a subject-specific capacity contract of 512 stored memories,
+2,048 semantic associations, and top-k 4 retrieval. The generic v0.2 organism keeps
+its smaller frozen defaults. The larger association budget is necessary because the
+47-memory v2 artifact currently contains 532 distinct semantic tag-pairs before any
+new lived experience is added. Changing these Pretorius resource limits after the
+first accepted result requires a new protocol version.
+
 ## Model and response contracts
 
 The same model must render both private cognition and public wording within one run.
-The evidence records the exact model name and an immutable build or model fingerprint.
+The evidence records the exact model name, an immutable build or model fingerprint, the package version, and a SHA-256 fingerprint of the critical implementation modules.
 Endpoint URLs and API keys are never written to evidence.
 
 Private cognition without the identity preamble uses

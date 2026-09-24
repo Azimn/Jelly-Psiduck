@@ -11,7 +11,7 @@ Provenance remains explicit in memory kinds but no longer participates as an
 associative tag. This removes a retrieval confound in which records could become
 related merely because they shared an evidence class.
 
-History can now be imported without workspace orientation. The frozen live-study
+Pretorius now uses a subject-specific capacity of 512 memories and 2,048 semantic associations while retaining top-k 4 retrieval. The generic v0.2 organism remains unchanged. The old 32-association toy cap would have retained only a small fraction of the 532 distinct semantic tag-pairs present in the current history seed.\n\nHistory can now be imported without workspace orientation. The frozen live-study
 protocol uses that mode so the treatment is durable state rather than six relevant
 records preloaded into working memory. Source classes also survive the subjective
 firewall as qualitative distinctions, so screen canon, legacy representation,
@@ -28,7 +28,7 @@ The frozen v0.2 model-efficacy harness now rejects identity-bearing or otherwise
 mutated prompts before provider invocation while preserving its original prompt
 contract and evidence shape.
 
-The new `pretorius-live-v1` harness freezes a 2x2 study of explicit identity
+The new `pretorius-live-v1` harness records package and implementation fingerprints and freezes a 2x2 study of explicit identity
 context and durable lived history, with the cartridge and model held constant.
 History arms disable workspace orientation. Six fixed probes test continuity,
 self-contradiction, creator autonomy, collaborator disagreement, source bounding,

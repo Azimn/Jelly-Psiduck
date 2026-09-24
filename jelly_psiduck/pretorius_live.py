@@ -8,6 +8,7 @@ history effect cannot be reduced to six preloaded working-memory records.
 from __future__ import annotations
 
 import argparse
+import importlib.metadata
 import hashlib
 import json
 import os
@@ -30,7 +31,14 @@ from .cognition import (
 )
 from .endogenous import SituatedCognition
 from .history import HISTORY_IMPORTER_VERSION, seed_history
-from .pretorius import DEFAULT_CARTRIDGE, DEFAULT_HISTORY, PretoriusSubject
+from .pretorius import (
+    DEFAULT_CARTRIDGE,
+    DEFAULT_HISTORY,
+    PRETORIUS_ASSOCIATION_LIMIT,
+    PRETORIUS_MEMORY_LIMIT,
+    PRETORIUS_TOP_K,
+    PretoriusSubject,
+)
 from .speech import (
     DEFAULT_SPEECH_MAX_TOKENS,
     DEFAULT_SPEECH_TEMPERATURE,
@@ -46,6 +54,7 @@ HISTORY_ID = "pretorius-lived-history-v2"
 HISTORY_SHA256 = "bfd591002ed8cd21c958845f1d92dd8cfb084c3ecab56d77e1ce20ebe893f7de"
 QUIET_TICKS = 2
 DEFAULT_REPLICATES = 3
+RELEASE_VERSION = "0.2.0rc1"
 
 CONDITIONS = (
     {"name": "cartridge_control", "identity_context": False, "lived_history": False},
@@ -122,6 +131,34 @@ def _digest(value) -> str:
         separators=(",", ":"),
     ).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
+
+
+def _software_contract() -> dict:
+    root = Path(__file__).resolve().parent
+    files = (
+        root / "cognition.py",
+        root / "speech.py",
+        root / "history.py",
+        root / "pretorius.py",
+        root / "pretorius_live.py",
+        root / "runtime.py",
+        root / "endogenous.py",
+        root.parent / "digital_subject" / "engine.py",
+    )
+    module_sha256 = {
+        str(path.relative_to(root.parent)).replace("\\", "/"):
+            hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in files
+    }
+    try:
+        package_version = importlib.metadata.version("jelly-psiduck")
+    except importlib.metadata.PackageNotFoundError:
+        package_version = None
+    return {
+        "package_version": package_version,
+        "implementation_sha256": _digest(module_sha256),
+        "module_sha256": module_sha256,
+    }
 
 
 def _provider_audit(provider) -> dict:
@@ -372,6 +409,11 @@ def _trial(
     )
     baseline_snapshot = baseline.inspect()
     baseline_sha256 = _digest(baseline_snapshot)
+    engine_capacity = {
+        "memory_limit": baseline.engine.memory_limit,
+        "association_limit": baseline.engine.association_limit,
+        "top_k": baseline.engine.top_k,
+    }
 
     live_path = directory / f"{name}-{replicate}-live.db"
     replay_path = directory / f"{name}-{replicate}-replay.db"
@@ -454,6 +496,7 @@ def _trial(
         },
         "replicate": replicate,
         "baseline_sha256": baseline_sha256,
+        "engine_capacity": engine_capacity,
         "history_import": history_report,
         "turns": turns,
         "cognition_calls": cognition.calls,
@@ -535,6 +578,14 @@ def evaluate(
             trial["condition"] for trial in trials
         } == {condition["name"] for condition in CONDITIONS},
         "paired_baselines_match": paired_baselines_match,
+        "pretorius_capacity_contract": all(
+            trial["engine_capacity"] == {
+                "memory_limit": PRETORIUS_MEMORY_LIMIT,
+                "association_limit": PRETORIUS_ASSOCIATION_LIMIT,
+                "top_k": PRETORIUS_TOP_K,
+            }
+            for trial in trials
+        ),
         "history_contract_pinned": history_contract_pinned,
         "history_arms_have_no_workspace_orientation": all(
             trial["history_import"] is None
@@ -565,11 +616,13 @@ def evaluate(
             )
         ),
     }
+    software_contract = _software_contract()
     harness_valid = all(checks.values())
     evidence_eligible = bool(
         not dry_run
         and replicates >= DEFAULT_REPLICATES
         and model_fingerprint
+        and software_contract["package_version"] == RELEASE_VERSION
         and harness_valid
     )
     return {
@@ -580,6 +633,12 @@ def evaluate(
             "probe_order": list(PROBES),
             "quiet_ticks_after_probe": QUIET_TICKS,
             "speaker": "Jay",
+        },
+        "software_contract": software_contract,
+        "resource_contract": {
+            "memory_limit": PRETORIUS_MEMORY_LIMIT,
+            "association_limit": PRETORIUS_ASSOCIATION_LIMIT,
+            "top_k": PRETORIUS_TOP_K,
         },
         "history_contract": {
             "history_id": HISTORY_ID,

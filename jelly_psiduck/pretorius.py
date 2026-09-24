@@ -10,7 +10,7 @@ from pathlib import Path
 from digital_subject.cartridge import load_cartridge
 
 from .cognition import OpenAICompatibleCognition
-from .endogenous import EndogenousSubject
+from .endogenous import EndogenousOrganism, EndogenousSubject
 from .firewall import remembered
 from .history import seed_history
 from .speech import OpenAICompatibleSpeechRenderer
@@ -19,6 +19,9 @@ from .speech import OpenAICompatibleSpeechRenderer
 ROOT = Path(__file__).resolve().parent
 DEFAULT_CARTRIDGE = ROOT / "cartridges" / "pretorius.toml"
 DEFAULT_HISTORY = ROOT / "histories" / "pretorius_v2.json"
+PRETORIUS_MEMORY_LIMIT = 512
+PRETORIUS_ASSOCIATION_LIMIT = 2048
+PRETORIUS_TOP_K = 4
 
 _HISTORY_PROJECTIONS = {
     "screen_canon": "The screen canon records this about my earlier story:",
@@ -46,10 +49,32 @@ def _project_history_memory(memory) -> str:
     return f"{lead} {detail}"
 
 
+class PretoriusOrganism(EndogenousOrganism):
+    """History-rich capacity without changing the frozen generic v0.2 organism."""
+
+    def __init__(
+        self,
+        state,
+        cartridge,
+        *,
+        memory_limit: int = PRETORIUS_MEMORY_LIMIT,
+        association_limit: int = PRETORIUS_ASSOCIATION_LIMIT,
+        top_k: int = PRETORIUS_TOP_K,
+    ):
+        super().__init__(
+            state,
+            cartridge,
+            memory_limit=memory_limit,
+            association_limit=association_limit,
+            top_k=top_k,
+        )
+
+
 class PretoriusSubject(EndogenousSubject):
     """Pretorius-only persistence envelope around the frozen v0.2 organism."""
 
     SCHEMA = 4
+    ENGINE_TYPE = PretoriusOrganism
 
     def __init__(self, *args, **kwargs):
         self.history_imports = {}
