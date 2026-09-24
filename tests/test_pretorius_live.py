@@ -48,3 +48,35 @@ def test_pretorius_dynamic_memory_ids_are_deterministic(tmp_path):
     assert ids[0] == ids[1]
     assert ids[0]
     assert all(item.startswith("pretorius-001:memory:") for item in ids[0])
+
+
+def test_pretorius_full_turn_state_is_deterministic(tmp_path):
+    from digital_subject.cartridge import load_cartridge
+    from jelly_psiduck.pretorius import DEFAULT_CARTRIDGE, PretoriusSubject
+
+    cartridge = load_cartridge(DEFAULT_CARTRIDGE)
+    snapshots = []
+    for name in ("first.db", "second.db"):
+        host = PretoriusSubject(
+            tmp_path / name,
+            cartridge,
+            subject_id="pretorius-001",
+        )
+        for text in (
+            "A deterministic continuity probe.",
+            "A second deterministic continuity probe.",
+            "A third deterministic continuity probe.",
+        ):
+            host.message("Jay", text)
+            host.heartbeat()
+        snapshots.append(host.inspect())
+
+    assert snapshots[0] == snapshots[1]
+    assert all(
+        record["id"].startswith("pretorius-001:record:")
+        for record in snapshots[0]["continuity"]["epistemic_records"]
+    )
+    assert all(
+        insight["id"].startswith("pretorius-001:insight:")
+        for insight in snapshots[0]["continuity"]["insights"]
+    )

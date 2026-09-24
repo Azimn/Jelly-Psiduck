@@ -112,6 +112,42 @@ class PretoriusSubject(EndogenousSubject):
     def _public_memory(self, memory):
         return _project_history_memory(memory)
 
+    def _canonicalize_continuity_ids(self):
+        """Make Pretorius continuity records replay-stable without changing generic v0.2."""
+        state = self.continuity.state
+        mapping = {}
+        record_ids = []
+        for index, record in enumerate(state.epistemic_records, start=1):
+            stable = f"{self.engine.state.subject_id}:record:{index:08d}"
+            mapping[record.id] = stable
+            record_ids.append(stable)
+        insight_ids = []
+        for index, insight in enumerate(state.insights, start=1):
+            stable = f"{self.engine.state.subject_id}:insight:{index:08d}"
+            mapping[insight.id] = stable
+            insight_ids.append(stable)
+
+        def remap(values):
+            return tuple(mapping.get(value, value) for value in values)
+
+        for record, stable in zip(state.epistemic_records, record_ids):
+            record.id = stable
+            record.evidence_ids = remap(record.evidence_ids)
+            if record.revised_by:
+                record.revised_by = mapping.get(record.revised_by, record.revised_by)
+        for insight, stable in zip(state.insights, insight_ids):
+            insight.id = stable
+            insight.evidence_ids = remap(insight.evidence_ids)
+        for item in state.expectations.values():
+            item.source_record_ids = remap(item.source_record_ids)
+        for item in state.commitments.values():
+            item.evidence_ids = remap(item.evidence_ids)
+
+    def _tick(self):
+        result = super()._tick()
+        self._canonicalize_continuity_ids()
+        return result
+
 
 def open_pretorius(
     db: str | Path,

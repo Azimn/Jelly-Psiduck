@@ -37,11 +37,14 @@ its smaller frozen defaults. The larger association budget is necessary because 
 new lived experience is added.
 
 New Pretorius memories acquired after initialization use deterministic subject-local
-sequence identifiers. Seeded history identifiers remain unchanged. This makes exact
+sequence identifiers. Seeded history identifiers remain unchanged. Pretorius also
+canonicalizes epistemic-record and reflection-insight identifiers at the end of each
+heartbeat, including their internal evidence references. This makes exact
 live-versus-replay snapshots meaningful without changing the frozen generic v0.2
-engine, whose donor implementation uses random UUIDs for newly stored memories.
-Changing these Pretorius resource limits or dynamic-memory identity rules after the
-first accepted result requires a new protocol version.
+engine or generic continuity ledger, whose donor implementations use random UUIDs.
+
+Changing these Pretorius resource limits or dynamic memory and continuity identity
+rules after the first accepted result requires a new protocol version.
 
 ## Model and response contracts
 
