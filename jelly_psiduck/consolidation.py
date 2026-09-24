@@ -205,6 +205,10 @@ def plan_consolidation(
             if memory.id not in protected
         ]
         eligible.sort(key=lambda memory: _retention_key(memory, tick, protected))
+        if len(eligible) < overflow:
+            raise RuntimeError(
+                "active memory budget cannot be satisfied without archiving protected evidence"
+            )
         for memory in eligible[:overflow]:
             actions.append(ConsolidationAction(
                 "archive",
