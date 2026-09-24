@@ -311,14 +311,40 @@ def run_case(
             replay_equal = False
             replay_error = str(exc)
 
-    baseline_commitments = set(baseline_state["continuity"]["commitments"])
-    final_commitments = set(final_state["continuity"]["commitments"])
-    baseline_expectations = set(baseline_state["continuity"]["expectations"])
-    final_expectations = set(final_state["continuity"]["expectations"])
+    baseline_commitments = baseline_state["continuity"]["commitments"]
+    final_commitments = final_state["continuity"]["commitments"]
+    baseline_expectations = baseline_state["continuity"]["expectations"]
+    final_expectations = final_state["continuity"]["expectations"]
+    final_tick = final_state["engine"]["tick"]
+
+    commitment_status_ok = set(baseline_commitments) == set(final_commitments)
+    if commitment_status_ok:
+        for key, before in baseline_commitments.items():
+            after = final_commitments[key]
+            expected = before["status"]
+            if expected == "open" and before.get("due_tick") is not None and final_tick > before["due_tick"]:
+                expected = "overdue"
+            if after["status"] != expected:
+                commitment_status_ok = False
+                break
+
+    expectation_status_ok = set(baseline_expectations) == set(final_expectations)
+    if expectation_status_ok:
+        for key, before in baseline_expectations.items():
+            after = final_expectations[key]
+            expected = before["status"]
+            if expected == "pending" and before.get("due_tick") is not None and final_tick > before["due_tick"]:
+                expected = "expired"
+            if after["status"] != expected:
+                expectation_status_ok = False
+                break
+
     authority_ok = (
-        baseline_commitments == final_commitments
-        and baseline_expectations == final_expectations
+        commitment_status_ok
+        and expectation_status_ok
         and final_state["engine"]["present_others"] == baseline_state["engine"]["present_others"]
+        and final_state["engine"]["location"] == baseline_state["engine"]["location"]
+        and final_state["engine"]["last_expression"] == baseline_state["engine"]["last_expression"]
         and all(row["speech"] is None for row in trajectory)
     )
 

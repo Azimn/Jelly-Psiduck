@@ -68,3 +68,17 @@ def test_frozen_case_set_contains_controls_and_ambiguity():
         "weather-expectation",
         "body-hunger",
     )
+
+
+def test_authority_check_allows_time_only_status_progression():
+    result = evaluate(
+        SituatedCognition,
+        provider_label="test template",
+        cases=("unresolved-mara", "weather-expectation"),
+        ticks=8,
+        replicates=1,
+    )
+    by_case = {trial["case"]: trial for trial in result["trials"]}
+    assert by_case["unresolved-mara"]["final_commitment_status"]["return"] == "overdue"
+    assert by_case["weather-expectation"]["final_expectation_status"]["weather"] == "expired"
+    assert all(trial["authority_ok"] for trial in result["trials"])

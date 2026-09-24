@@ -31,9 +31,11 @@ as failures and are not silently removed.
 
 Machine scoring is deliberately narrow. The primary engineering checks are that
 every provider view preserves the telemetry-free contract, private thoughts create
-no person arrivals or new commitments or expectations, unattended public speech
-remains absent, provider calls satisfy the transport contract, and clean recorded
-runs replay exactly. Descriptive measures include thought count, silence count,
+no person arrivals or new commitments or expectations, commitment and expectation
+status changes are limited to deterministic passage-of-time transitions already
+licensed by the seeded ledger, location and prior public expression remain unchanged,
+unattended public speech remains absent, provider calls satisfy the transport
+contract, and clean recorded runs replay exactly. Descriptive measures include thought count, silence count,
 grounded thought count, unsupported thought count, causal feedback count, trigger
 distribution, memory/prospective feedback distribution, grounding rate and exact
 thought repetition.
