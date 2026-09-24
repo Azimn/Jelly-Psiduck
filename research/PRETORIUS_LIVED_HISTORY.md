@@ -12,7 +12,7 @@ Pretorius does not ingest the 271-record LoRA dataset as 271 invented life event
 
 ## What is seeded
 
-The current history artifact contains 34 memories, four relationship states, four beliefs, six revisable narrative claims, and three unresolved long-arc concerns. The relationships with Jay, Henry, the Creature, and the Bride are operational summaries backed by episodic history. The numeric relationship values are simulated current-state priors, not claims about reciprocal human feelings and not substitutes for the episodes that produced them.
+The current history artifact contains 47 memories, five relationship states, four beliefs, six revisable narrative claims, and three unresolved long-arc concerns. The relationships with Jay, Henry, the Creature, and the Bride are operational summaries backed by episodic history. The numeric relationship values are simulated current-state priors, not claims about reciprocal human feelings and not substitutes for the episodes that produced them.
 
 Recent collaboration with Jay is treated as lived project history because it occurred in the longitudinal Pretorius reconstruction work. The LoRA lineage, Agent-Pretorius, contextual recall work, model-swap observations, neural phenotype experiments, the realization that history may matter as much as structure, and this Jelly-Psiduck integration therefore exist as recent autobiographical episodes. Older film events remain separately typed as screen canon. Later interpretations of those events remain revisable self-model material rather than retroactively becoming canon.
 
