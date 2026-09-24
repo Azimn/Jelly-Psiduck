@@ -13,3 +13,5 @@ subject_runtime.json
 build/
 dist/
 .venv/
+
+*.snapshot.json

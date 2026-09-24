@@ -110,7 +110,7 @@ class PersistentContinuityHost(PersistentOrganismHost):
         self.last_continuity_influence = influence
 
     def _after_observe(self, event: Event, packet: ExpressionPacket) -> None:
-        influence = self.last_continuity_influence or ContinuityInfluence(source=event.kind)
+        influence = self.last_continuity_influence or ContinuityInfluence(source=event.kind, pressure_deltas=())
         private = packet.private_content if isinstance(packet.private_content, dict) else {}
         private["continuity_influence"] = {
             "source": influence.source,
