@@ -109,6 +109,11 @@ def test_interpreter_resolves_paraphrase_but_not_ambiguous_referent():
     assert not interpret("The sky is blue.", {"Mara": ("a",)}).actors
     assert not interpret("I should check the stove.", {"Mara": ("a",)}).actors
     assert not interpret("Maybe the train is delayed.", {"Mara": ("a",)}).actors
+    assert not interpret("I will check the stove.", {"Will": ("a",)}).actors
+    assert not interpret("I hope the rain stops.", {"Hope": ("a",)}).actors
+    assert not interpret("It may be delayed.", {"May": ("a",)}).actors
+    assert interpret("I wonder where Will is.", {"Will": ("a",)}).actors == ("Will",)
+    assert interpret("I am worried about Hope.", {"Hope": ("a",)}).actors == ("Hope",)
     assert interpret("She is not back.", {"Mara": ("a",)}).modality == "negated_or_uncertain"
     assert interpret("She hasn't returned.", {"Mara": ("a",)}).modality == "negated_or_uncertain"
 
@@ -226,3 +231,20 @@ def test_non_social_expectation_feedback_does_not_require_memory_or_actor(tmp_pa
     effects = [e for t in h.inspect()["trace"] if t["kind"] == "inner_ear" for e in t["effects"]]
     assert any(e["channel"] == "prospective" and e["support"] == "expectation:weather" for e in effects)
     assert h.inspect()["continuity"]["expectations"]["weather"]["status"] == "expired"
+
+
+def test_common_word_actor_does_not_gain_feedback_from_ordinary_usage(tmp_path):
+    h = host(tmp_path, cognition=Silent())
+    promise(h, actor="Will", due=1)
+    h.heartbeat()
+    before = h.inspect()["engine"]["pressures"]["fear"]
+    with h._transaction():
+        thought = h._add("thought", "I will check the stove.")
+        h._hear(thought)
+    after = h.inspect()
+    inner = [t for t in after["trace"] if t["kind"] == "inner_ear"][-1]
+    assert inner["meaning"]["actors"] == []
+    assert inner["concepts"] == []
+    assert inner["effects"] == []
+    assert after["engine"]["pressures"]["fear"] == before
+    assert after["attention"] == []

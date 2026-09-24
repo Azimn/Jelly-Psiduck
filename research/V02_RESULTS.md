@@ -77,3 +77,13 @@ pronoun. Negation detection also covers ordinary English contractions such as
 This narrows the demonstrated reference mechanism rather than expanding the
 claim. The existing pronoun case remains supported; general ellipsis and
 coreference remain future work.
+
+
+A second semantic review exposed a related lexical hazard for actor identifiers that
+are also ordinary English words. A commitment actor named Will could previously be
+matched by "I will check the stove", and the generic memory-tag cue path could bypass
+the discourse interpreter entirely. Single-token actor references now require local
+referential context such as "where is Will", "about Hope" or "Mara returned".
+Grounded actor names are also excluded from generic lexical tag matching. Regression
+tests cover Will, Hope and May plus a runtime case proving that ordinary use of
+"will" produces no actor cue, prospective feedback or fear change.

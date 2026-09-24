@@ -221,7 +221,12 @@ class EndogenousSubject(UnifiedSubject):
             meaning = ThoughtMeaning(actors, "recall", "uninterpreted", ())
         vocabulary = {tag for m in self.engine.state.memories for tag in m.tags}
         tokens = concepts(thought.first_person)
-        cues = tuple(sorted(set(meaning.actors) | {tag for tag in vocabulary if concepts(tag) <= tokens}))
+        actor_terms = {actor.casefold() for actor in anchors}
+        lexical = {
+            tag for tag in vocabulary
+            if tag.casefold() not in actor_terms and concepts(tag) <= tokens
+        }
+        cues = tuple(sorted(set(meaning.actors) | lexical))
         if self.config.thought_effects:
             self.attention = cues
         # One attended recollection per thought leaves related candidates available

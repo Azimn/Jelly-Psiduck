@@ -58,8 +58,11 @@ It annotates inquiry/anticipation/concern/recall and uncertainty/negation, and c
 resolve an explicit personal pronoun when exactly one actor is grounded in the
 currently visible experience. Elliptical omitted subjects fail closed because an
 instruction such as "I should check the stove" must not inherit the only visible
-person merely from discourse position. Ambiguous references fail closed. The
-literal-only ablation cannot resolve the same pronoun thought. These annotations do not turn
+person merely from discourse position. Single-word actor names also require bounded
+referential context, so an actor named Will is not activated by "I will check the
+stove." Generic memory-tag matching excludes currently grounded actor names and
+cannot bypass that rule. Ambiguous references fail closed. The literal-only
+ablation cannot resolve the same pronoun thought. These annotations do not turn
 "she returned" into observation or resolution. This is beyond literal name matching
 for the demonstrated cases, but is not general semantic understanding or an LLM
 semantic judge. Multilingual interpretation, complex negation, topic shifts and
