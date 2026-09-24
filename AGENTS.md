@@ -3,6 +3,11 @@
 Read README.md, docs/ARCHITECTURE.md, docs/STATUS.md, docs/SOURCES.md and
 research/PROTOCOL.md before substantive changes.
 
+For v0.2 also read docs/ARCHITECTURE_V02.md, research/V02_PROTOCOL.md and
+research/V02_RESULTS.md. v0.1 remains a frozen comparison apparatus. New behavior
+uses the explicit v0.2 runtime and separate schema-2 SQLite stores; never silently
+migrate the default v0.1 runtime or overwrite its frozen experimental evidence.
+
 - Persona-and-Jelly remains the organism foundation and sole conduct authority.
 - The engine simulates the organism; the subject experiences the consequences.
 - Cognition receives only immutable subjective views, never engine telemetry.
@@ -18,3 +23,4 @@ research/PROTOCOL.md before substantive changes.
 
 Verification: `python -m pytest -q` and
 `python -m jelly_psiduck.evaluation --output evidence/local-inner-ear.json`.
+For v0.2 also run `python -m jelly_psiduck.endogenous_evaluation --output evidence/local-v02.json`.
