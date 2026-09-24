@@ -46,6 +46,8 @@ def _memory_id(history_id: str, record_id: str) -> str:
 
 def seed_history(subject, path: str | Path) -> dict[str, Any]:
     """Import typed prehistory once. A changed artifact requires a new subject store."""
+    if not hasattr(subject, "history_imports"):
+        raise TypeError("subject must provide persistent history_imports metadata")
     raw, digest = load_history(path)
     history_id = str(raw["history_id"])
     path = Path(path)
