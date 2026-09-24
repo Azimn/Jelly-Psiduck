@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import threading
 import time
 from dataclasses import asdict, dataclass, field
@@ -113,16 +114,15 @@ class PersistentOrganismHost:
         raw_runtime: dict[str, Any] = {}
         if snapshot_path.exists():
             snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
-            if int(snapshot.get("schema_version", 0)) != 1:
+            if int(snapshot.get("schema_version", 0)) != 2:
                 raise ValueError("unsupported persistent host snapshot schema")
+            if snapshot.get("cartridge_fingerprint") != cls._cartridge_fingerprint(cartridge):
+                raise ValueError("changed cartridge; explicit migration required")
             engine = SubjectEngine.from_dict(dict(snapshot["engine"]), cartridge)
             raw_runtime = dict(snapshot.get("runtime", {}))
         else:
             if state_path.exists():
-                try:
-                    engine = SubjectEngine.load(state_path, cartridge)
-                except TypeError:
-                    engine = SubjectEngine.load(state_path)
+                raise ValueError("unverified legacy cartridge; explicit migration required")
             else:
                 engine = SubjectEngine.from_cartridge(cartridge, subject_id)
             if runtime_path.exists():
@@ -157,16 +157,15 @@ class PersistentOrganismHost:
             start_tick = int(self.engine.state.tick)
             start_needs = dict(getattr(self.engine.state, "needs", {}))
             start_memories = len(getattr(self.engine.state, "memories", []))
-            start_log = len(getattr(self.engine.state, "life_log", []))
+            new_log = []
 
             if applied:
                 first_tick_time = now - max(0, applied - 1) * self.tick_seconds
                 for index in range(applied):
                     self.world.advance_to(first_tick_time + index * self.tick_seconds)
                     self.world.apply_to(self.engine)
-                    self._live_one_tick()
+                    new_log.extend(self._live_one_tick())
 
-            new_log = getattr(self.engine.state, "life_log", [])[start_log:]
             report = CatchUpReport(
                 elapsed_seconds=elapsed,
                 requested_ticks=requested,
@@ -180,7 +179,7 @@ class PersistentOrganismHost:
                 end_needs=dict(getattr(self.engine.state, "needs", {})),
                 experiences=tuple(str(getattr(item, "first_person", item)) for item in new_log[-12:]),
             )
-            self.runtime.last_wall_time = now
+            self.runtime.last_wall_time = max(now, self.runtime.last_wall_time)
             self.runtime.remainder_seconds = remainder
             self.runtime.total_catchup_ticks += applied
             self.runtime.world = self.world.state.to_dict()
@@ -191,17 +190,17 @@ class PersistentOrganismHost:
     def run_ticks(self, ticks: int) -> tuple[Experience, ...]:
         with self._lock:
             count = max(0, int(ticks))
-            start_log = len(getattr(self.engine.state, "life_log", []))
+            experiences = []
             timestamp = max(float(self.clock()), self.world.state.last_updated_at)
             for _ in range(count):
                 timestamp += self.tick_seconds
                 self.world.advance_to(timestamp)
                 self.world.apply_to(self.engine)
-                self._live_one_tick()
-            self.runtime.last_wall_time = float(self.clock())
+                experiences.extend(self._live_one_tick())
+            self.runtime.last_wall_time = max(float(self.clock()), self.runtime.last_wall_time)
             self.runtime.world = self.world.state.to_dict()
             self.save()
-            return tuple(getattr(self.engine.state, "life_log", [])[start_log:])
+            return tuple(experiences)
 
     def observe(self, event: Event) -> ExpressionPacket:
         with self._lock:
@@ -210,7 +209,7 @@ class PersistentOrganismHost:
             packet = self.engine.step(event)
             self._after_observe(event, packet)
             self.runtime.world = self.world.state.to_dict()
-            self.runtime.last_wall_time = float(self.clock())
+            self.runtime.last_wall_time = max(float(self.clock()), self.runtime.last_wall_time)
             self.save()
             return packet
 
@@ -248,7 +247,8 @@ class PersistentOrganismHost:
 
     def _snapshot_payload(self) -> dict[str, Any]:
         return {
-            "schema_version": 1,
+            "schema_version": 2,
+            "cartridge_fingerprint": self._cartridge_fingerprint(self.cartridge),
             "engine": self.engine.state.to_dict(),
             "runtime": self._runtime_payload(),
             "extra": self._snapshot_extra(),
@@ -280,9 +280,15 @@ class PersistentOrganismHost:
         payload["max_catchup_ticks"] = self.max_catchup_ticks
         return payload
 
-    def _live_one_tick(self) -> None:
+    @staticmethod
+    def _cartridge_fingerprint(cartridge: Cartridge) -> str:
+        return hashlib.sha256(json.dumps(asdict(cartridge), sort_keys=True).encode()).hexdigest()
+
+    def _live_one_tick(self) -> tuple[Experience, ...]:
         live = getattr(self.engine, "live", None)
         if callable(live):
-            live(1)
+            return tuple(live(1))
         else:
+            tick = self.engine.state.tick
             self.engine.idle_tick(1)
+            return tuple(e for e in self.engine.state.life_log if e.tick > tick)

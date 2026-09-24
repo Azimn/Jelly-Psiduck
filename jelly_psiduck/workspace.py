@@ -62,8 +62,9 @@ class SubjectiveWorkspace:
         return item
 
     def view(self) -> CognitiveView:
+        eligible = [r for r in self.records if r.available_to_cognition]
         return CognitiveView(tuple(FeltExperience(r.source, r.first_person)
-                                   for r in self.records[-16:] if r.available_to_cognition))
+                                   for r in eligible[-16:]))
 
     def to_dict(self):
         return {"records": [asdict(r) for r in self.records], "sequence": self.sequence}

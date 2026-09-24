@@ -52,6 +52,8 @@ rule; this is a deliberately narrow mechanism, not general semantic understandin
 ## Bounds and persistence
 
 - Workspace: most recent 64 records; cognitive view: most recent 16 eligible records.
+- Continuity record retention is a soft recency bound: support referenced by
+  retained commitments, expectations, insights and revision chains stays resident.
 - Trace: most recent 256 operator records; thought text: at most 600 characters.
 - Inbox: 64 events, with at most eight consumed per heartbeat.
 - Cognition: default two calls per tick, configurable from zero to four.

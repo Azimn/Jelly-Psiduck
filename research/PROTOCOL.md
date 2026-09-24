@@ -1,5 +1,13 @@
 # Research protocol: causal private thought
 
+Final-review qualification: the original v1 cognitive view sliced its window
+before excluding unavailable thought records. Longer no-inner-ear arms could
+therefore receive fewer eligible experiences. The corrected view filters first.
+The original short probe still passes unchanged, recorded in
+`evidence/final-review-v1.json`. New longitudinal experiments must use the corrected
+window and retained continuity support. This is a control-quality repair, not new
+evidence of spontaneous cognition.
+
 The broader hypothesis is that an organism-mediated first-person workspace with
 recursive thought feedback supports temporal continuity, spontaneous cognition,
 relationship-dependent behavior, prospective behavior and self-consistent change

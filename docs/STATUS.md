@@ -1,5 +1,19 @@
 # Status
 
+## Final v0.1 review hardening
+
+The fresh review of `30923a1` identified five additional defects. Regression-tested
+repairs now validate the full cartridge content on legacy-host reopen, preserve
+referenced continuity records and their revision chains, fill the cognitive view
+from eligible records, retain the legacy clock watermark, and collect new life
+experiences while ticks execute rather than slicing a capped log by old length.
+
+Local Python 3.11: **62 tests passed**. The unchanged v1 experiment passes all seven
+checks; `evidence/final-review-v1.json` records this rerun. The original frozen
+artifact remains unchanged. Legacy host snapshots now use schema 2; fingerprintless
+snapshots/standalone JSON require explicit migration instead of silent adoption.
+SQLite subject stores retain schema 1. v0.1 remains feature-frozen.
+
 ## 2026-09-23: Unified Subjective Organism v0.1
 
 Implemented the Persona-and-Jelly foundation, engine/subject interface, bounded

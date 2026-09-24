@@ -164,7 +164,6 @@ class SubjectContinuity:
             evidence_ids=tuple(dict.fromkeys(str(value) for value in evidence_ids)),
         )
         self.state.epistemic_records.append(record)
-        self.state.epistemic_records = self.state.epistemic_records[-self.record_limit :]
         explicit_commitment = (
             isinstance(metadata.get("commitment"), dict)
             and bool(metadata["commitment"].get("description"))
@@ -180,6 +179,7 @@ class SubjectContinuity:
         ):
             self._apply_event_conventions(event, record)
         self._maybe_reflect(record)
+        self._retain_evidence()
         return record
 
     def revise_record(
@@ -207,7 +207,6 @@ class SubjectContinuity:
         original.status = "superseded"
         original.revised_by = revision.id
         self.state.epistemic_records.append(revision)
-        self.state.epistemic_records = self.state.epistemic_records[-self.record_limit :]
         self._add_insight(
             "revised_belief",
             f"Later evidence changed how I understand: {original.objective_record}",
@@ -216,7 +215,35 @@ class SubjectContinuity:
             int(tick),
             "contradiction_or_correction",
         )
+        self._retain_evidence()
         return revision
+
+    def _retain_evidence(self) -> None:
+        """The recent-record limit is soft when canonical support is still referenced.
+
+        Retain transitive revision/evidence dependencies as well as direct support
+        of commitments, expectations and retained insights. External evidence IDs
+        are not local records and are not invented here.
+        """
+        records = {r.id: r for r in self.state.epistemic_records}
+        wanted = {r.id for r in self.state.epistemic_records[-self.record_limit:]}
+        for item in self.state.commitments.values():
+            wanted.update(item.evidence_ids)
+        for item in self.state.expectations.values():
+            wanted.update(item.source_record_ids)
+        for item in self.state.insights:
+            wanted.update(item.evidence_ids)
+        pending = list(wanted)
+        while pending:
+            record = records.get(pending.pop())
+            if record is None:
+                continue
+            linked = set(record.evidence_ids)
+            if record.revised_by:
+                linked.add(record.revised_by)
+            pending.extend(linked - wanted)
+            wanted.update(linked)
+        self.state.epistemic_records = [r for r in self.state.epistemic_records if r.id in wanted]
 
     def create_expectation(
         self,
