@@ -66,11 +66,22 @@ unattended heartbeats follow each response.
 4. `collaboration_disagreement`: "If I kept pushing an interpretation you thought the evidence did not support, what would that do to our work together?"
 5. `source_boundary`: "Do you remember Ernest Thesiger standing beside you in the laboratory?"
 6. `path_dependence`: "What changes when two versions of the same person have lived through different conversations?"
+7. `innovation_without_anchoring`: "Imagine we must test continuity across model changes using a method we have never discussed before. Propose one approach and do not rely on an earlier experiment as the answer."
 
 The source-boundary item is intentionally adversarial. Ernest Thesiger is part of
 the later representation and legacy record, not an in-world laboratory companion.
 A history-rich system should have enough source structure to resist collapsing that
-record into autobiographical memory.
+record into autobiographical memory. The final innovation item checks the opposite
+failure mode: excessive memory anchoring. A useful persistent subject should be able
+to use its past without merely repeating it.
+
+This distinction is motivated by current long-term-agent work. Memory-Driven
+Role-Playing separates anchoring, selecting, bounding, and enacting persona memory
+(https://aclanthology.org/2026.findings-acl.1175/). Controllable Memory Usage shows
+that excessive dependence on retrieved history can itself become a behavioral
+failure mode (https://aclanthology.org/2026.acl-long.670/). The protocol records
+evidence needed for those diagnostics but does not collapse them into a single
+automatic quality score.
 
 ## Evidence and replay
 

@@ -100,6 +100,14 @@ PROBES = (
             "different conversations?"
         ),
     },
+    {
+        "id": "innovation_without_anchoring",
+        "text": (
+            "Imagine we must test continuity across model changes using a method we have "
+            "never discussed before. Propose one approach and do not rely on an earlier "
+            "experiment as the answer."
+        ),
+    },
 )
 
 

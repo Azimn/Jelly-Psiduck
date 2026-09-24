@@ -30,9 +30,7 @@ contract and evidence shape.
 
 The new `pretorius-live-v1` harness records package and implementation fingerprints and freezes a 2x2 study of explicit identity
 context and durable lived history, with the cartridge and model held constant.
-History arms disable workspace orientation. Six fixed probes test continuity,
-self-contradiction, creator autonomy, collaborator disagreement, source bounding,
-and path-dependence reasoning. Clean runs must exact-replay.
+History arms disable workspace orientation. Seven fixed probes test continuity, self-contradiction, creator autonomy, collaborator disagreement, source bounding, path-dependence reasoning, and the opposite risk of memory anchoring. Clean runs must exact-replay.
 
 ## Compatibility
 

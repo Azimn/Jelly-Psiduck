@@ -10,7 +10,7 @@ unchanged and now has an executable guard against accidental identity-context
 contamination.
 
 A frozen `pretorius-live-v1` harness adds a 2x2 identity-context by lived-history
-study with six fixed probes, two quiet ticks after each probe, orientation-free
+study with seven fixed probes, two quiet ticks after each probe, orientation-free
 history arms, exact replay of clean trials, retained provider failures, and explicit
 evidence-eligibility requirements. No actual live-model efficacy or human-likeness
 result is claimed by this release candidate.
