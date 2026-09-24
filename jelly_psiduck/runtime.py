@@ -52,6 +52,7 @@ class UnifiedSubject:
     SCHEMA = 1
     CONFIG_TYPE = ExperimentConfig
     ENGINE_TYPE = Organism
+    CONTINUITY_TYPE = SubjectContinuity
 
     def __init__(self, path: str | Path, cartridge: Cartridge, *, cognition=None, renderer=None,
                  config: ExperimentConfig | None = None, subject_id="subject-001"):
@@ -64,7 +65,7 @@ class UnifiedSubject:
         self.fingerprint = hashlib.sha256(json.dumps(asdict(cartridge), sort_keys=True).encode()).hexdigest()
         self._lock = threading.RLock()
         self.engine = self.ENGINE_TYPE.from_cartridge(cartridge, subject_id)
-        self.continuity = SubjectContinuity()
+        self.continuity = self.CONTINUITY_TYPE()
         self.workspace = SubjectiveWorkspace()
         self.workspace.add(0, "memory", f"I know myself as {cartridge.display_name}. "
                            + str(cartridge.identity.get("summary", "")), generated_by="cartridge")
@@ -98,7 +99,7 @@ class UnifiedSubject:
             raise ValueError("unsupported schema or changed cartridge; explicit migration required")
         self.config = self.CONFIG_TYPE(**raw["config"])
         self.engine = self.ENGINE_TYPE.from_dict(raw["engine"], self.cartridge)
-        self.continuity = SubjectContinuity(ContinuityState.from_dict(raw["continuity"]))
+        self.continuity = self.CONTINUITY_TYPE(ContinuityState.from_dict(raw["continuity"]))
         self.workspace = SubjectiveWorkspace.from_dict(raw["workspace"])
         self.pending = raw["pending"]
         self.cooldowns = raw["cooldowns"]

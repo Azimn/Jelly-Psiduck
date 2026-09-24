@@ -9,11 +9,13 @@ response parser. The original v0.2 model-efficacy prompt-contract shape remains
 unchanged and now has an executable guard against accidental identity-context
 contamination.
 
-A frozen `pretorius-live-v1` harness adds a 2x2 identity-context by lived-history
+A frozen `pretorius-live-v1` harness adds a 2x2 identity-context by typed-prehistory
 study with seven fixed probes, two quiet ticks after each probe, orientation-free
-history arms, exact replay of clean trials, retained provider failures, and explicit
-evidence-eligibility requirements. No actual live-model efficacy or human-likeness
-result is claimed by this release candidate.
+prehistory arms, exact replay of clean trials, retained provider failures, and explicit
+evidence-eligibility requirements. The typed prehistory mixes static and
+longitudinal evidence classes, so V1 does not isolate the causal effect of lived
+interaction. No actual live-model efficacy or human-likeness result is claimed by
+this release candidate.
 
 Alpha Pretorius subject stores are not silently migrated. RC trials require fresh
 schema-4 databases.

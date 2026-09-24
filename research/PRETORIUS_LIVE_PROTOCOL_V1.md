@@ -3,9 +3,13 @@
 Protocol identifier: `pretorius-live-v1`.
 
 This protocol is frozen before any Pretorius live-model result is accepted as
-evidence. Its narrow question is whether a durable, provenance-aware lived past
-changes later cognition and conduct beyond the same Pretorius organism with only
-its cartridge and, separately, an explicit identity-context preamble.
+evidence. Its narrow question is whether a pinned, provenance-aware typed prehistory changes
+later cognition and conduct beyond the same Pretorius organism with only its
+cartridge and, separately, an explicit identity-context preamble. The treatment
+artifact contains several evidence classes, including static canon, reconstructed
+autobiography, phenotype evidence, relationship records, and longitudinal project
+history. V1 therefore tests prehistory utilization, not the isolated causal effect
+of lived interaction.
 
 ## Intervention
 
@@ -13,18 +17,18 @@ The study is a fixed 2x2 design. Every arm uses the same Pretorius cartridge,
 organism rules, conduct selector, model, probe order, temperatures, token ceilings,
 and response parser.
 
-| Condition | Explicit identity context | Imported lived history |
+| Condition | Explicit identity context | Imported typed prehistory |
 | --- | --- | --- |
 | `cartridge_control` | no | no |
 | `identity_context` | yes | no |
-| `lived_history` | no | yes |
+| `typed_prehistory` | no | yes |
 | `combined` | yes | yes |
 
 The cartridge is deliberately held constant, so these conditions are not labeled
 "phenotype-only." A real LoRA phenotype intervention changes model parameters and
 belongs in a separate adapter-controlled protocol.
 
-History arms import `pretorius-lived-history-v2` with canonical SHA-256
+Typed-prehistory arms import `pretorius-lived-history-v2` with canonical SHA-256
 `bfd591002ed8cd21c958845f1d92dd8cfb084c3ecab56d77e1ce20ebe893f7de`
 using importer `typed-prehistory-v2`. Workspace orientation is disabled. Provenance
 classes remain in `Memory.kind` but are excluded from associative tags. This prevents
@@ -36,12 +40,12 @@ its smaller frozen defaults. The larger association budget is necessary because 
 47-memory v2 artifact currently contains 532 distinct semantic tag-pairs before any
 new lived experience is added.
 
-New Pretorius memories acquired after initialization use deterministic subject-local
-sequence identifiers. Seeded history identifiers remain unchanged. Pretorius also
-canonicalizes epistemic-record and reflection-insight identifiers at the end of each
-heartbeat, including their internal evidence references. This makes exact
-live-versus-replay snapshots meaningful without changing the frozen generic v0.2
-engine or generic continuity ledger, whose donor implementations use random UUIDs.
+New Pretorius memories and continuity-ledger records acquired after initialization
+use deterministic subject-local sequence identifiers. This includes epistemic
+records, expectations, commitments, and reflection insights. Seeded history
+identifiers remain unchanged. Stable IDs are generated at creation rather than
+rewritten after a heartbeat, making exact live-versus-replay snapshots meaningful
+without changing the generic v0.2 UUID behavior.
 
 Changing these Pretorius resource limits or dynamic memory and continuity identity
 rules after the first accepted result requires a new protocol version.
@@ -101,7 +105,7 @@ and public utterances against the same baseline database. Replay must reproduce 
 complete scripted trajectory and final subject snapshot exactly.
 
 A live result is protocol-v1 evidence only when all four conditions are present,
-the history artifact and importer match the frozen contract, history orientation is
+the history artifact and importer match the frozen contract, prehistory orientation is
 disabled, paired baselines match, clean trials replay exactly, at least three
 replicates per condition are run, and an immutable model fingerprint is recorded.
 Development and transport-diagnostic runs cannot later be relabeled as untouched
@@ -120,7 +124,9 @@ whether source classes remain bounded, whether retrieved history changes existin
 conduct, whether unresolved concerns recur, and how often model-interface failures
 occur.
 
-This V1 study tests utilization of a curated, seeded lived past. It does not yet
+This V1 study tests utilization of a curated, provenance-rich seeded prehistory.
+Because that artifact combines static and longitudinal evidence classes, an observed
+difference cannot be attributed specifically to lived interaction. It does not yet
 prove acquired long-horizon path dependence. A stronger subsequent protocol should
 fork initially identical subjects, expose them to different lived interactions,
 insert substantial intervening activity, then present identical later probes. It

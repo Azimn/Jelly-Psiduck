@@ -8,6 +8,7 @@ import threading
 from pathlib import Path
 
 from digital_subject.cartridge import load_cartridge
+from digital_subject.continuity import SubjectContinuity
 
 from .cognition import OpenAICompatibleCognition
 from .endogenous import EndogenousOrganism, EndogenousSubject
@@ -47,6 +48,34 @@ def _project_history_memory(memory) -> str:
     if memory.strength < 0.5:
         return f"{lead} I recover it only vaguely: {detail}"
     return f"{lead} {detail}"
+
+
+class PretoriusContinuity(SubjectContinuity):
+    """Replay-stable ledger IDs isolated from the frozen generic continuity class."""
+
+    ID_PREFIX = "pretorius-001"
+
+    def __init__(self, state=None, **kwargs):
+        super().__init__(state, **kwargs)
+        self._sequences = {
+            "record": self._max_sequence("record", (item.id for item in self.state.epistemic_records)),
+            "expectation": self._max_sequence("expectation", self.state.expectations),
+            "commitment": self._max_sequence("commitment", self.state.commitments),
+            "insight": self._max_sequence("insight", (item.id for item in self.state.insights)),
+        }
+
+    def _max_sequence(self, kind, values):
+        prefix = f"{self.ID_PREFIX}:{kind}:"
+        sequences = []
+        for value in values:
+            value = str(value)
+            if value.startswith(prefix) and value[len(prefix):].isdigit():
+                sequences.append(int(value[len(prefix):]))
+        return max(sequences, default=0)
+
+    def _new_id(self, kind: str) -> str:
+        self._sequences[kind] = self._sequences.get(kind, 0) + 1
+        return f"{self.ID_PREFIX}:{kind}:{self._sequences[kind]:08d}"
 
 
 class PretoriusOrganism(EndogenousOrganism):
@@ -94,6 +123,7 @@ class PretoriusSubject(EndogenousSubject):
 
     SCHEMA = 4
     ENGINE_TYPE = PretoriusOrganism
+    CONTINUITY_TYPE = PretoriusContinuity
 
     def __init__(self, *args, **kwargs):
         self.history_imports = {}
@@ -111,43 +141,6 @@ class PretoriusSubject(EndogenousSubject):
 
     def _public_memory(self, memory):
         return _project_history_memory(memory)
-
-    def _canonicalize_continuity_ids(self):
-        """Make Pretorius continuity records replay-stable without changing generic v0.2."""
-        state = self.continuity.state
-        mapping = {}
-        record_ids = []
-        for index, record in enumerate(state.epistemic_records, start=1):
-            stable = f"{self.engine.state.subject_id}:record:{index:08d}"
-            mapping[record.id] = stable
-            record_ids.append(stable)
-        insight_ids = []
-        for index, insight in enumerate(state.insights, start=1):
-            stable = f"{self.engine.state.subject_id}:insight:{index:08d}"
-            mapping[insight.id] = stable
-            insight_ids.append(stable)
-
-        def remap(values):
-            return tuple(mapping.get(value, value) for value in values)
-
-        for record, stable in zip(state.epistemic_records, record_ids):
-            record.id = stable
-            record.evidence_ids = remap(record.evidence_ids)
-            if record.revised_by:
-                record.revised_by = mapping.get(record.revised_by, record.revised_by)
-        for insight, stable in zip(state.insights, insight_ids):
-            insight.id = stable
-            insight.evidence_ids = remap(insight.evidence_ids)
-        for item in state.expectations.values():
-            item.source_record_ids = remap(item.source_record_ids)
-        for item in state.commitments.values():
-            item.evidence_ids = remap(item.evidence_ids)
-
-    def _tick(self):
-        result = super()._tick()
-        self._canonicalize_continuity_ids()
-        return result
-
 
 def open_pretorius(
     db: str | Path,

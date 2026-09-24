@@ -1,3 +1,4 @@
+from digital_subject.models import Event
 from jelly_psiduck.pretorius_live import CONDITIONS, PROTOCOL, evaluate
 
 
@@ -10,7 +11,7 @@ def test_pretorius_live_dry_run_is_replayable_and_not_evidence():
     }
     assert report["checks"]["paired_baselines_match"]
     assert report["checks"]["history_contract_pinned"]
-    assert report["checks"]["history_arms_have_no_workspace_orientation"]
+    assert report["checks"]["prehistory_arms_have_no_workspace_orientation"]
     assert report["checks"]["public_views_exclude_subject_id"]
     assert report["checks"]["clean_trials_replay_exactly"], [
         {
@@ -80,3 +81,42 @@ def test_pretorius_full_turn_state_is_deterministic(tmp_path):
         insight["id"].startswith("pretorius-001:insight:")
         for insight in snapshots[0]["continuity"]["insights"]
     )
+
+
+def test_pretorius_continuity_ids_are_stable_at_creation_and_restart(tmp_path):
+    from digital_subject.cartridge import load_cartridge
+    from jelly_psiduck.pretorius import DEFAULT_CARTRIDGE, PretoriusSubject
+
+    cartridge = load_cartridge(DEFAULT_CARTRIDGE)
+    db = tmp_path / "continuity.db"
+    host = PretoriusSubject(db, cartridge, subject_id="pretorius-001")
+    with host._transaction():
+        record = host.continuity.observe(
+            Event("message", "Jay", "A continuity ID probe.", tags=("Jay", "communication")),
+            tick=host.engine.state.tick,
+            interpretation="I hear Jay.",
+        )
+        expectation = host.continuity.create_expectation(
+            "A later check will occur.",
+            tick=host.engine.state.tick,
+            evidence_ids=(record.id,),
+        )
+        commitment = host.continuity.create_commitment(
+            "Jay",
+            "Return to the probe.",
+            tick=host.engine.state.tick,
+            evidence_ids=(record.id,),
+        )
+
+    assert record.id == "pretorius-001:record:00000001"
+    assert expectation.id == "pretorius-001:expectation:00000001"
+    assert commitment.id == "pretorius-001:commitment:00000001"
+
+    reopened = PretoriusSubject(db, cartridge, subject_id="pretorius-001")
+    with reopened._transaction():
+        next_record = reopened.continuity.observe(
+            Event("message", "Jay", "A second probe.", tags=("Jay", "communication")),
+            tick=reopened.engine.state.tick,
+            interpretation="I hear Jay again.",
+        )
+    assert next_record.id == "pretorius-001:record:00000002"

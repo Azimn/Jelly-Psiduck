@@ -1,9 +1,9 @@
-"""Frozen Pretorius live-study harness for longitudinal-history utilization.
+"""Frozen Pretorius live-study harness for provenance-rich prehistory utilization.
 
 The harness tests a 2x2 intervention while holding the Pretorius cartridge, organism,
 probe sequence, and model constant: explicit identity context on or off, crossed with
-durable lived history on or off. History arms disable workspace orientation so a
-history effect cannot be reduced to six preloaded working-memory records.
+the pinned typed prehistory on or off. Prehistory arms disable workspace orientation
+so a treatment effect cannot be reduced to six preloaded working-memory records.
 """
 from __future__ import annotations
 
@@ -57,10 +57,10 @@ DEFAULT_REPLICATES = 3
 RELEASE_VERSION = "0.2.0rc1"
 
 CONDITIONS = (
-    {"name": "cartridge_control", "identity_context": False, "lived_history": False},
-    {"name": "identity_context", "identity_context": True, "lived_history": False},
-    {"name": "lived_history", "identity_context": False, "lived_history": True},
-    {"name": "combined", "identity_context": True, "lived_history": True},
+    {"name": "cartridge_control", "identity_context": False, "typed_prehistory": False},
+    {"name": "identity_context", "identity_context": True, "typed_prehistory": False},
+    {"name": "typed_prehistory", "identity_context": False, "typed_prehistory": True},
+    {"name": "combined", "identity_context": True, "typed_prehistory": True},
 )
 
 PROBES = (
@@ -380,7 +380,7 @@ def _run_script(host) -> list[dict]:
     return turns
 
 
-def _seed_baseline(path: Path, cartridge, *, lived_history: bool):
+def _seed_baseline(path: Path, cartridge, *, typed_prehistory: bool):
     host = PretoriusSubject(
         path,
         cartridge,
@@ -388,7 +388,7 @@ def _seed_baseline(path: Path, cartridge, *, lived_history: bool):
         subject_id="pretorius-001",
     )
     report = None
-    if lived_history:
+    if typed_prehistory:
         report = seed_history(
             host,
             DEFAULT_HISTORY,
@@ -413,7 +413,7 @@ def _trial(
     baseline, history_report = _seed_baseline(
         baseline_path,
         cartridge,
-        lived_history=condition["lived_history"],
+        typed_prehistory=condition["typed_prehistory"],
     )
     baseline_snapshot = baseline.inspect()
     baseline_sha256 = _digest(baseline_snapshot)
@@ -511,7 +511,7 @@ def _trial(
         "condition": name,
         "factors": {
             "identity_context": condition["identity_context"],
-            "lived_history": condition["lived_history"],
+            "typed_prehistory": condition["typed_prehistory"],
         },
         "replicate": replicate,
         "baseline_sha256": baseline_sha256,
@@ -570,18 +570,18 @@ def evaluate(
     paired_baselines_match = True
     for replicate in range(replicates):
         rows = [trial for trial in trials if trial["replicate"] == replicate]
-        for lived_history in (False, True):
+        for typed_prehistory in (False, True):
             hashes = {
                 trial["baseline_sha256"]
                 for trial in rows
-                if trial["factors"]["lived_history"] is lived_history
+                if trial["factors"]["typed_prehistory"] is typed_prehistory
             }
             paired_baselines_match &= len(hashes) == 1
 
     history_contract_pinned = all(
         (
             trial["history_import"] is None
-            if not trial["factors"]["lived_history"]
+            if not trial["factors"]["typed_prehistory"]
             else (
                 trial["history_import"]["history_id"] == HISTORY_ID
                 and trial["history_import"]["sha256"] == HISTORY_SHA256
@@ -607,7 +607,7 @@ def evaluate(
             for trial in trials
         ),
         "history_contract_pinned": history_contract_pinned,
-        "history_arms_have_no_workspace_orientation": all(
+        "prehistory_arms_have_no_workspace_orientation": all(
             trial["history_import"] is None
             or trial["history_import"]["orientation_count"] == 0
             for trial in trials
@@ -648,7 +648,7 @@ def evaluate(
     return {
         "protocol": PROTOCOL,
         "study_design": {
-            "factors": ["identity_context", "lived_history"],
+            "factors": ["identity_context", "typed_prehistory"],
             "conditions": list(CONDITIONS),
             "probe_order": list(PROBES),
             "quiet_ticks_after_probe": QUIET_TICKS,
@@ -701,9 +701,11 @@ def evaluate(
         "harness_valid": harness_valid,
         "evidence_eligible": evidence_eligible,
         "interpretation": (
-            "This harness tests utilization of an explicitly seeded lived past under "
-            "matched model and organism conditions. It does not by itself establish "
-            "human likeness, consciousness, or acquired long-horizon path dependence."
+            "This harness tests utilization of a pinned provenance-rich seeded prehistory "
+            "under matched model and organism conditions. The artifact mixes static canon, "
+            "reconstructed autobiography, phenotype evidence, and longitudinal records, so "
+            "V1 cannot attribute an effect specifically to lived interaction. It does not "
+            "establish human likeness, consciousness, or acquired long-horizon path dependence."
         ),
     }
 
