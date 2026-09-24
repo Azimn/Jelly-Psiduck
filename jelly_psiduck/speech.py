@@ -6,6 +6,7 @@ private thoughts as observations.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import urllib.request
 from dataclasses import asdict, dataclass
@@ -13,9 +14,11 @@ from typing import Any, Protocol
 
 from digital_subject.models import Action, ExpressionPacket
 
+from .cognition import MODEL_RESPONSE_PARSER_VERSION, parse_text_json
 from .firewall import NEED_LANGUAGE
 
 
+SPEECH_PROMPT_VERSION = "public-speech-json-v1"
 DEFAULT_SPEECH_MAX_TOKENS = 420
 DEFAULT_SPEECH_TEMPERATURE = 0.65
 
@@ -23,7 +26,6 @@ DEFAULT_SPEECH_TEMPERATURE = 0.65
 @dataclass(frozen=True, slots=True)
 class SpeechView:
     subject: str
-    subject_id: str
     selected_conduct: str
     heard: str
     current_experience: str
@@ -49,6 +51,7 @@ def build_speech_view(
     user_input: str,
     identity: dict[str, Any],
     memory_context: tuple[str, ...] = (),
+    relevant_memories: tuple[str, ...] | None = None,
 ) -> SpeechView:
     """Detach a qualitative public-expression view from engine telemetry."""
     felt = tuple(
@@ -58,7 +61,6 @@ def build_speech_view(
     )
     return SpeechView(
         subject=packet.display_name,
-        subject_id=packet.subject_id,
         selected_conduct=action.value,
         heard=str(user_input),
         current_experience=packet.current_experience,
@@ -66,7 +68,9 @@ def build_speech_view(
         felt_needs=felt,
         relationship_stance=tuple(packet.relationship_stance),
         constraint=packet.constraint,
-        relevant_memories=tuple(packet.relevant_memories),
+        relevant_memories=tuple(
+            packet.relevant_memories if relevant_memories is None else relevant_memories
+        ),
         recent_recollections=tuple(memory_context[-4:]),
         beliefs=tuple(packet.beliefs),
         self_narrative=tuple(packet.narrative),
@@ -106,35 +110,46 @@ class OpenAICompatibleSpeechRenderer:
         self.timeout = timeout
         self.temperature = float(temperature)
         self.max_tokens = int(max_tokens)
+        self.calls: list[dict] = []
+
+    def prompt_for(self, view: SpeechView) -> str:
+        return speech_prompt(view)
 
     def render(self, view: SpeechView) -> str | None:
-        data = json.dumps({
-            "model": self.model,
-            "messages": [{"role": "user", "content": speech_prompt(view)}],
-            "max_tokens": self.max_tokens,
-            "temperature": self.temperature,
-        }).encode()
-        headers = {"Content-Type": "application/json"}
-        if self.api_key:
-            headers["Authorization"] = f"Bearer {self.api_key}"
-        request = urllib.request.Request(self.endpoint, data=data, headers=headers)
-        with urllib.request.urlopen(request, timeout=self.timeout) as response:
-            payload = response.read(131073)
-        if len(payload) > 131072:
-            raise ValueError("model response too large")
-        result = json.loads(payload)
-        content = result["choices"][0]["message"]["content"].strip()
-        if content.startswith("```") and content.endswith("```"):
-            lines = content.splitlines()
-            content = "\n".join(lines[1:-1]).strip()
-            if content.startswith("json"):
-                content = content[4:].lstrip()
-        parsed = json.loads(content)
-        if not isinstance(parsed, dict) or set(parsed) != {"text"}:
-            raise ValueError("expected only text")
-        text = parsed["text"]
-        if text is None:
-            return None
-        if not isinstance(text, str) or not 0 < len(text.strip()) <= 4000:
-            raise ValueError("invalid speech text")
-        return text.strip()
+        prompt = self.prompt_for(view)
+        call = {
+            "prompt_sha256": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
+            "prompt_contract": SPEECH_PROMPT_VERSION,
+            "parser_version": MODEL_RESPONSE_PARSER_VERSION,
+            "raw_content": None,
+            "parse_mode": None,
+            "output_text": None,
+            "error_type": None,
+        }
+        try:
+            data = json.dumps({
+                "model": self.model,
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": self.max_tokens,
+                "temperature": self.temperature,
+            }).encode()
+            headers = {"Content-Type": "application/json"}
+            if self.api_key:
+                headers["Authorization"] = f"Bearer {self.api_key}"
+            request = urllib.request.Request(self.endpoint, data=data, headers=headers)
+            with urllib.request.urlopen(request, timeout=self.timeout) as response:
+                payload = response.read(131073)
+            if len(payload) > 131072:
+                raise ValueError("model response too large")
+            result = json.loads(payload)
+            content = result["choices"][0]["message"]["content"]
+            call["raw_content"] = content
+            text, mode = parse_text_json(content, max_chars=4000)
+            call["parse_mode"] = mode
+            call["output_text"] = text
+            self.calls.append(call)
+            return text
+        except Exception as exc:
+            call["error_type"] = type(exc).__name__
+            self.calls.append(call)
+            raise

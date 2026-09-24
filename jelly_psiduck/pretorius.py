@@ -11,19 +11,45 @@ from digital_subject.cartridge import load_cartridge
 
 from .cognition import OpenAICompatibleCognition
 from .endogenous import EndogenousSubject
+from .firewall import remembered
 from .history import seed_history
 from .speech import OpenAICompatibleSpeechRenderer
 
 
 ROOT = Path(__file__).resolve().parent
 DEFAULT_CARTRIDGE = ROOT / "cartridges" / "pretorius.toml"
-DEFAULT_HISTORY = ROOT / "histories" / "pretorius_v1.json"
+DEFAULT_HISTORY = ROOT / "histories" / "pretorius_v2.json"
+
+_HISTORY_PROJECTIONS = {
+    "screen_canon": "The screen canon records this about my earlier story:",
+    "expanded_autobiography": "My reconstructed autobiography says:",
+    "foundational_self_memory": "A foundational self-memory returns:",
+    "legacy_awareness": "A later cultural record tells me:",
+    "archive_self_report": "An archived self-report attributed to me says:",
+    "phenotype_evidence": "A phenotype record suggests this recurring pattern:",
+    "lived_project_history": "I remember this from my recent reconstruction work:",
+    "relationship_history": "I remember this relationship episode:",
+    "research_history": "I remember this from research in which I participated:",
+}
+
+
+def _project_history_memory(memory) -> str:
+    if not memory.kind.startswith("history:"):
+        return remembered(memory)
+    evidence_class = memory.kind.split(":", 1)[1]
+    lead = _HISTORY_PROJECTIONS.get(evidence_class, "A provenance-marked record returns to mind:")
+    detail = f"{memory.summary} {memory.meaning}".strip()
+    if memory.strength < 0.2:
+        return f"{lead} The details are too weak for me to recover confidently."
+    if memory.strength < 0.5:
+        return f"{lead} I recover it only vaguely: {detail}"
+    return f"{lead} {detail}"
 
 
 class PretoriusSubject(EndogenousSubject):
     """Pretorius-only persistence envelope around the frozen v0.2 organism."""
 
-    SCHEMA = 3
+    SCHEMA = 4
 
     def __init__(self, *args, **kwargs):
         self.history_imports = {}
@@ -35,6 +61,12 @@ class PretoriusSubject(EndogenousSubject):
     def _restore(self, raw):
         super()._restore(raw)
         self.history_imports = dict(raw.get("history_imports", {}))
+
+    def _remember(self, memory):
+        return _project_history_memory(memory)
+
+    def _public_memory(self, memory):
+        return _project_history_memory(memory)
 
 
 def open_pretorius(
@@ -51,12 +83,7 @@ def open_pretorius(
     cognition = None
     renderer = None
     if endpoint and model:
-        cognition = OpenAICompatibleCognition(
-            endpoint,
-            model,
-            api_key,
-            identity=cartridge.identity,
-        )
+        cognition = OpenAICompatibleCognition(endpoint, model, api_key, identity=cartridge.identity)
         if model_speech:
             renderer = OpenAICompatibleSpeechRenderer(endpoint, model, api_key)
     host = PretoriusSubject(

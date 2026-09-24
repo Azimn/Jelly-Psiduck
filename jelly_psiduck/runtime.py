@@ -184,7 +184,7 @@ class UnifiedSubject:
                              concepts=event.tags, memory_links=links)
             self.continuity.observe(event, tick=state.tick, interpretation=text, evidence_ids=links)
             for memory in self.engine._memories_by_ids(links):
-                self._add("memory", remembered(memory), memory_links=(memory.id,), generated_by=item.id)
+                self._add("memory", self._remember(memory), memory_links=(memory.id,), generated_by=item.id)
 
         temporal = self._project_temporal()
 
@@ -231,6 +231,14 @@ class UnifiedSubject:
                      "experience_count": self.workspace.sequence - start, "speech": speech})
         return {"tick": state.tick, "action": action.value, "speech": speech, "thoughts": thought_ids}
 
+    def _remember(self, memory):
+        """Project a stored memory into subjective language. Subclasses may preserve provenance."""
+        return remembered(memory)
+
+    def _public_memory(self, memory):
+        """Project a memory for public wording without changing generic v0.2 behavior."""
+        return memory.meaning
+
     def _render_public(self, packet, action, event):
         """Render wording after conduct selection without exposing private telemetry."""
         if packet is not None and event is not None and self.renderer is not None:
@@ -245,6 +253,12 @@ class UnifiedSubject:
                 user_input=event.description,
                 identity=self.cartridge.identity,
                 memory_context=memory_context,
+                relevant_memories=tuple(
+                    self._public_memory(memory)
+                    for memory in self.engine._memories_by_ids(
+                        packet.private_content["matched_memory_ids"]
+                    )
+                ),
             )
             try:
                 text = self.renderer.render(view)
@@ -312,7 +326,7 @@ class UnifiedSubject:
             c.status == "overdue" for c in self.continuity.state.commitments.values()))
         if revisit and self.attention and self.config.memory_feedback:
             for memory in self.engine.recall(self.attention):
-                self._add("memory", remembered(memory), memory_links=(memory.id,), generated_by="attention")
+                self._add("memory", self._remember(memory), memory_links=(memory.id,), generated_by="attention")
         warranted = bool(incoming) or fresh_body or temporal or revisit
         return warranted
 
@@ -330,7 +344,7 @@ class UnifiedSubject:
         memories = self.engine.recall(cues)
         effects = []
         for memory in memories:
-            self._add("memory", remembered(memory), memory_links=(memory.id,), generated_by=thought.id)
+            self._add("memory", self._remember(memory), memory_links=(memory.id,), generated_by=thought.id)
             key = f"recall:{memory.id}"
             if self.config.thought_effects and self._ready(key):
                 pressure, delta = self.engine.appraise_recollection(memory)

@@ -6,7 +6,7 @@ import pytest
 
 from digital_subject.cartridge import load_cartridge
 from jelly_psiduck.endogenous import EndogenousSubject
-from jelly_psiduck.history import seed_history
+from jelly_psiduck.history import HISTORY_IMPORTER_VERSION, seed_history
 from jelly_psiduck.pretorius import DEFAULT_CARTRIDGE, DEFAULT_HISTORY, PretoriusSubject, open_pretorius
 
 
@@ -25,8 +25,10 @@ def test_history_import_is_persisted_and_idempotent(tmp_path):
     assert first["already_present"] is False
     assert first["memory_count"] == 47
     assert first["relationship_count"] == 5
+    assert first["importer_version"] == HISTORY_IMPORTER_VERSION
+    assert first["association_tag_policy"] == "semantic-only"
     snapshot = host.inspect()
-    assert "pretorius-lived-history-v1" in snapshot["history_imports"]
+    assert "pretorius-lived-history-v2" in snapshot["history_imports"]
     assert snapshot["engine"]["relationships"]["Jay"]["familiarity"] == pytest.approx(.95)
     assert "Elizabeth" in snapshot["engine"]["relationships"]
     assert any(memory["id"].endswith(":foundation-tower-continuity") for memory in snapshot["engine"]["memories"])
@@ -50,7 +52,7 @@ def test_jay_message_retrieves_actual_shared_history(tmp_path):
         if record["source"] == "memory"
     ]
     linked = {link for record in memories for link in record["memory_links"]}
-    assert any(link.startswith("pretorius-lived-history-v1:jay-") for link in linked)
+    assert any(link.startswith("pretorius-lived-history-v2:jay-") for link in linked)
 
 
 def test_history_keeps_source_classes_distinct(tmp_path):
@@ -92,6 +94,7 @@ def test_model_renderer_receives_no_engine_telemetry_and_cannot_choose_conduct(t
     assert "private_content" not in serialized
     assert "sensorium" not in serialized
     assert all(isinstance(item, str) for item in view.felt_needs)
+    assert "subject_id" not in serialized
 
 
 def test_history_import_rejects_changed_artifact_after_seed(tmp_path):
