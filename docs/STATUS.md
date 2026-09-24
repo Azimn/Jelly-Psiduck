@@ -33,7 +33,9 @@ retrieval traces, learned associations, tensions, self-model versions, reflectio
 proposals, relationship episodes, prospective items, diary entries, and scheduler
 state. Their mechanisms remain reserved for the later alpha milestones.
 
-See `docs/PRETORIUS_V03.md`.
+Deterministic CI validation reports 109 passing tests on Python 3.11 and a successful parallel Python 3.12 job. All existing deterministic evaluation commands completed successfully. The frozen Pretorius live dry-run remained mechanically valid and correctly remained ineligible as v0.2 evidence under the 0.3.0a1 package version.
+
+See `docs/PRETORIUS_V03.md` and `research/PRETORIUS_V03_A1_VALIDATION.md`.
 
 ## 0.2.0rc1 Pretorius release candidate
 
