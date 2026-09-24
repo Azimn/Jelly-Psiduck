@@ -130,3 +130,14 @@ python -m jelly_psiduck.model_evaluation --endpoint http://localhost:11434/v1 --
 
 No endpoint URL or API key is stored in the evidence. See
 `research/MODEL_EFFICACY_PROTOCOL.md` before treating any live-model run as evidence.
+
+
+### v0.3 idle-reverie candidate
+
+A separate v0.3 branch experiments with sparse cognition during otherwise quiet
+time, a balanced provider view that resists thought-loop saturation, and optional
+habituation of repeatedly forced unresolved concerns. It is deliberately separate
+from the longer lived-history/Pretorius experiment.
+
+Use `--architecture v03` with a new database. See
+`docs/ARCHITECTURE_V03.md` and `research/V03_PROTOCOL.md`.
