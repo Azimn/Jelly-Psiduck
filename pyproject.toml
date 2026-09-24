@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "jelly-psiduck"
-version = "0.2.0rc1"
+version = "0.3.0a1"
 description = "A persistent organism with a first-person workspace and causal inner speech"
 requires-python = ">=3.11"
 dependencies = []
@@ -17,6 +17,8 @@ test = ["pytest>=8"]
 jelly-psiduck = "jelly_psiduck.cli:main"
 jelly-pretorius = "jelly_psiduck.pretorius:main"
 jelly-pretorius-study = "jelly_psiduck.pretorius_live:main"
+jelly-pretorius-v03 = "jelly_psiduck.pretorius_v03:main"
+jelly-pretorius-migrate-v03 = "jelly_psiduck.migration:main"
 
 [tool.setuptools.packages.find]
 include = ["digital_subject*", "jelly_psiduck*"]
