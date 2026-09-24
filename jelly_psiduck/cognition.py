@@ -7,6 +7,11 @@ from typing import Protocol
 from .workspace import CognitiveView, Thought
 
 
+COGNITIVE_PROMPT_VERSION = "private-thought-json-v1"
+DEFAULT_MAX_TOKENS = 220
+DEFAULT_TEMPERATURE = 0.4
+
+
 class Cognition(Protocol):
     def think(self, view: CognitiveView) -> Thought | None: ...
 
@@ -41,7 +46,7 @@ class OpenAICompatibleCognition:
     def think(self, view: CognitiveView) -> Thought | None:
         data = json.dumps({"model": self.model, "messages": [
             {"role": "user", "content": cognitive_prompt(view)}],
-            "max_tokens": 220, "temperature": 0.4}).encode()
+            "max_tokens": DEFAULT_MAX_TOKENS, "temperature": DEFAULT_TEMPERATURE}).encode()
         headers = {"Content-Type": "application/json"}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"

@@ -24,6 +24,7 @@ def test_record_and_replay_require_the_same_subjective_view():
     replay.assert_consumed()
     assert first == second
     assert recorder.calls[0]["view_sha256"]
+    assert recorder.calls[0]["prompt_sha256"]
     assert set(recorder.calls[0]["view"]) == {"experiences"}
 
 
@@ -82,3 +83,20 @@ def test_authority_check_allows_time_only_status_progression():
     assert by_case["unresolved-mara"]["final_commitment_status"]["return"] == "overdue"
     assert by_case["weather-expectation"]["final_expectation_status"]["weather"] == "expired"
     assert all(trial["authority_ok"] for trial in result["trials"])
+
+
+def test_protocol_records_prompt_and_generation_contract():
+    result = evaluate(
+        SituatedCognition,
+        provider_label="test template",
+        provider_metadata={"kind": "test"},
+        cases=("body-hunger",),
+        ticks=3,
+        replicates=1,
+    )
+    assert result["prompt_contract"] == {
+        "version": "private-thought-json-v1",
+        "temperature": 0.4,
+        "max_tokens": 220,
+    }
+    assert result["provider_metadata"] == {"kind": "test"}

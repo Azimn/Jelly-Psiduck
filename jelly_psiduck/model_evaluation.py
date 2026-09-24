@@ -22,7 +22,13 @@ from typing import Callable
 
 from digital_subject.models import Event
 
-from .cognition import OpenAICompatibleCognition
+from .cognition import (
+    COGNITIVE_PROMPT_VERSION,
+    DEFAULT_MAX_TOKENS,
+    DEFAULT_TEMPERATURE,
+    OpenAICompatibleCognition,
+    cognitive_prompt,
+)
 from .endogenous import EndogenousSubject, SituatedCognition
 from .endogenous_evaluation import experimental_cartridge
 from .evaluation import Silence
@@ -59,9 +65,11 @@ class RecordingCognition:
         self.calls: list[dict] = []
 
     def think(self, view: CognitiveView):
+        prompt = cognitive_prompt(view)
         row = {
             "index": len(self.calls),
             "view_sha256": _view_hash(view),
+            "prompt_sha256": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
             "view": _view_payload(view),
             "thought": None,
             "error_type": None,
@@ -372,6 +380,7 @@ def evaluate(
     provider_factory: Callable[[], object],
     *,
     provider_label: str,
+    provider_metadata: dict | None = None,
     cases: tuple[str, ...] = CASE_NAMES,
     ticks: int = DEFAULT_TICKS,
     replicates: int = 1,
@@ -397,6 +406,12 @@ def evaluate(
     return {
         "protocol": PROTOCOL,
         "provider": provider_label,
+        "provider_metadata": provider_metadata or {},
+        "prompt_contract": {
+            "version": COGNITIVE_PROMPT_VERSION,
+            "temperature": DEFAULT_TEMPERATURE,
+            "max_tokens": DEFAULT_MAX_TOKENS,
+        },
         "cases": list(cases),
         "ticks_per_trial": ticks,
         "replicates": replicates,
@@ -414,6 +429,7 @@ def main():
     parser = argparse.ArgumentParser(description="Run the frozen v0.2 unscripted-provider trial harness")
     parser.add_argument("--endpoint", help="OpenAI-compatible API base URL, including /v1")
     parser.add_argument("--model", help="Model name for the configured endpoint")
+    parser.add_argument("--model-fingerprint", help="Optional immutable model digest or build identifier recorded in evidence")
     parser.add_argument("--dry-run", action="store_true", help="Use the stateless template provider instead of a model")
     parser.add_argument("--case", action="append", choices=CASE_NAMES, dest="cases")
     parser.add_argument("--ticks", type=int, default=DEFAULT_TICKS)
@@ -430,16 +446,23 @@ def main():
             parser.error("--dry-run cannot be combined with --endpoint or --model")
         provider_factory = SituatedCognition
         provider_label = "dry-run SituatedCognition template control"
+        provider_metadata = {"kind": "template-control"}
     else:
         if not args.endpoint or not args.model:
             parser.error("--endpoint and --model are required unless --dry-run is used")
         provider_factory = lambda: OpenAICompatibleCognition(args.endpoint, args.model)
         provider_label = f"OpenAI-compatible model: {args.model}"
+        provider_metadata = {
+            "kind": "openai-compatible",
+            "model": args.model,
+            "model_fingerprint": args.model_fingerprint,
+        }
 
     cases = tuple(args.cases) if args.cases else CASE_NAMES
     result = evaluate(
         provider_factory,
         provider_label=provider_label,
+        provider_metadata=provider_metadata,
         cases=cases,
         ticks=args.ticks,
         replicates=args.replicates,

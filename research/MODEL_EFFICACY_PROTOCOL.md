@@ -22,8 +22,10 @@ efficacy evidence must use all seven cases, 24 ticks and at least three independ
 replicates per case.
 
 Every provider call is recorded with the complete synthetic CognitiveView, a
-SHA-256 digest of that view, and the private thought returned by the provider.
-The endpoint URL and API key are not written to evidence. Clean trials are replayed
+SHA-256 digest of that view, a SHA-256 digest of the exact cognitive prompt, and
+the private thought returned by the provider. The evidence also records the prompt
+contract identifier, temperature, token ceiling, model name and an optional immutable
+model fingerprint. The endpoint URL and API key are not written to evidence. Clean trials are replayed
 from the recorded thought sequence against the same baseline store. Replay must
 receive the same view digest at every cognition call and must reproduce the complete
 trajectory and final subject snapshot exactly. Provider-error trials are retained
@@ -47,9 +49,11 @@ thoughts are not better, more causal effects are not better, and repeated langua
 is not automatically pathological. Prose quality, plausibility and human likeness
 require a separate blinded rating protocol.
 
-The first accepted live-model run freezes this protocol version. Changes to cases,
-prompt wording, workspace visibility, runtime thresholds, interpreter behavior,
-temperature or scoring after viewing model results require a new protocol version.
+Protocol v1 fixes the private-thought prompt contract at private-thought-json-v1,
+temperature 0.4 and a 220-token generation ceiling. The first accepted live-model
+run freezes this protocol version. Changes to cases, prompt wording, workspace
+visibility, runtime thresholds, interpreter behavior, temperature, token ceiling
+or scoring after viewing model results require a new protocol version.
 Development runs may be used to diagnose transport failures, but they cannot later
 be relabeled as untouched holdouts.
 
