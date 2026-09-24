@@ -223,3 +223,78 @@ def test_v03_full_turn_replay_is_exact(tmp_path):
     assert snapshots[0] == snapshots[1]
     assert len(snapshots[0]["autobiographical_events"]) == 3
     _ledger_from_snapshot(snapshots[0]).verify()
+
+
+def test_open_commitment_transitively_protects_supporting_memory(tmp_path):
+    host, _ = open_pretorius_v03(tmp_path / "pretorius-v03.db")
+    host.message("Jay", "I will send the dataset tomorrow.")
+    host.heartbeat()
+    memory_id = host.inspect()["autobiographical_events"][-1]["memory_links"][0]
+
+    with host._transaction():
+        record = host.continuity.state.epistemic_records[-1]
+        commitment = host.continuity.create_commitment(
+            "Jay",
+            "Send the dataset tomorrow.",
+            tick=host.engine.state.tick,
+            evidence_ids=(record.id,),
+        )
+        assert memory_id in host._protected_ids()
+        assert commitment.status == "open"
+
+
+def test_migrated_schema4_control_is_not_silently_seeded(tmp_path):
+    source_db = tmp_path / "control-rc.db"
+    target_db = tmp_path / "control-v03.db"
+    cartridge = load_cartridge(DEFAULT_CARTRIDGE)
+    control = PretoriusSubject(
+        source_db,
+        cartridge,
+        subject_id="pretorius-001",
+    )
+    assert control.inspect()["history_imports"] == {}
+
+    migrate_schema4_to_schema5(source_db, target_db)
+    migrated, report = open_pretorius_v03(target_db)
+
+    assert migrated.inspect()["history_imports"] == {}
+    assert migrated.inspect()["engine"]["memories"] == []
+    assert report["migrated_without_typed_prehistory"] is True
+
+
+def test_consolidation_replay_after_restart_is_canonical_byte_equivalent(tmp_path):
+    baseline_db = tmp_path / "baseline.db"
+    host, _ = open_pretorius_v03(baseline_db)
+    with host._transaction():
+        for index in range(PRETORIUS_MEMORY_LIMIT + 24):
+            host.engine._store_memory(Memory(
+                id="placeholder",
+                summary=f"Replay memory {index}",
+                meaning=f"I experienced replay event {index}.",
+                tags=(f"replay-{index}",),
+                strength=0.2 + (index % 3) * 0.01,
+                emotional_charge=(index % 4) * 0.02,
+                created_tick=host.engine.state.tick,
+                last_recalled_tick=host.engine.state.tick,
+            ))
+
+    baseline_bytes = baseline_db.read_bytes()
+    outputs = []
+    for name in ("replay-a.db", "replay-b.db"):
+        path = tmp_path / name
+        path.write_bytes(baseline_bytes)
+        replay = PretoriusV03Subject(
+            path,
+            load_cartridge(DEFAULT_CARTRIDGE),
+            subject_id="pretorius-001",
+        )
+        replay.consolidate()
+        outputs.append(json.dumps(
+            replay.inspect(),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        ).encode("utf-8"))
+
+    assert outputs[0] == outputs[1]
