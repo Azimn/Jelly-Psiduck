@@ -1,5 +1,40 @@
 # Status
 
+## 0.3.0a1 Pretorius autobiographical substrate
+
+Pretorius v0.3 now develops on a schema-5 line branched from the accepted
+0.2.0rc1 Pretorius head at `510f87c514b8fe7aa683c86bb74d5eb5961dab96`.
+The schema-4 runtime, frozen `pretorius-live-v1` protocol, and v0.2 evidence
+remain unchanged.
+
+The a1 implementation adds a deterministic append-only `lived:v1`
+autobiographical ledger with Pretorius-local event IDs and a SHA-256 hash chain.
+Objective host records remain separate from subjective experience records, so a
+speaker's autobiographical assertion is retained as something the speaker said
+rather than promoted into fact.
+
+Schema 5 replaces destructive active-memory overflow with a model-free
+consolidation and archive layer. The active pool remains bounded at the existing
+Pretorius 512-memory budget, but archived memories retain their full payload,
+archive reason, prior retrieval proxy, replacement link when present, cycle, and
+linked lived-event IDs. Consolidation handles explicit supersession, conservative
+duplicate detection, contradiction flags, protected evidence, and deterministic
+budget maintenance.
+
+Existing schema-4 stores are never silently upgraded. The explicit migration tool
+copies into a separate schema-5 database, fingerprints the source database,
+source payload, pinned history artifacts, and target implementation, and maps
+every migrated memory, relationship, belief, narrative claim, continuity record,
+expectation, commitment, and reflection insight. Migration does not retroactively
+reclassify inherited schema-4 records as `lived:v1`.
+
+Later v0.3 persistence stores are present but behaviorally inactive in a1:
+retrieval traces, learned associations, tensions, self-model versions, reflection
+proposals, relationship episodes, prospective items, diary entries, and scheduler
+state. Their mechanisms remain reserved for the later alpha milestones.
+
+See `docs/PRETORIUS_V03.md`.
+
 ## 0.2.0rc1 Pretorius release candidate
 
 The release-candidate branch now uses Pretorius schema 4, history artifact
