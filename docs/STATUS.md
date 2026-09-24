@@ -1,5 +1,14 @@
 # Status
 
+## v0.3 candidate branch: idle reverie
+
+A separate v0.3 candidate is under development from the generic v0.2
+model-efficacy head. It does not include PR #4's lived-history/Pretorius treatment.
+The predeclared protocol is in `research/V03_PROTOCOL.md`; architecture details
+are in `docs/ARCHITECTURE_V03.md`. Validation results will be recorded after CI.
+
+# Status
+
 ## Stacked model-efficacy harness
 
 A separate candidate branch now freezes a synthetic unscripted-provider protocol,
