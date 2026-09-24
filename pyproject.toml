@@ -14,7 +14,8 @@ readme = "README.md"
 test = ["pytest>=8"]
 
 [project.scripts]
-jelly-psiduck = "jelly_psiduck.cli:main"\njelly-pretorius = "jelly_psiduck.pretorius:main"
+jelly-psiduck = "jelly_psiduck.cli:main"
+jelly-pretorius = "jelly_psiduck.pretorius:main"
 
 [tool.setuptools.packages.find]
 include = ["digital_subject*", "jelly_psiduck*"]
