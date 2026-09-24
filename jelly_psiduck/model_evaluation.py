@@ -432,7 +432,10 @@ def evaluate(
             "version": COGNITIVE_PROMPT_VERSION,
             "temperature": DEFAULT_TEMPERATURE,
             "max_tokens": DEFAULT_MAX_TOKENS,
-            "parser_version": MODEL_RESPONSE_PARSER_VERSION,
+        },
+        "response_parser": {
+            "version": MODEL_RESPONSE_PARSER_VERSION,
+            "accepted_wrappers": ["json", "fenced_json"],
         },
         "cases": list(cases),
         "ticks_per_trial": ticks,

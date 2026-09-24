@@ -9,6 +9,7 @@ from .workspace import CognitiveView, Thought
 
 
 COGNITIVE_PROMPT_VERSION = "private-thought-json-v1"
+IDENTITY_COGNITIVE_PROMPT_VERSION = "private-thought-json-v1+identity-v1"
 MODEL_RESPONSE_PARSER_VERSION = "single-text-json-v1"
 DEFAULT_MAX_TOKENS = 220
 DEFAULT_TEMPERATURE = 0.4
@@ -99,7 +100,7 @@ class OpenAICompatibleCognition:
         prompt = self.prompt_for(view)
         call = {
             "prompt_sha256": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
-            "prompt_contract": COGNITIVE_PROMPT_VERSION,
+            "prompt_contract": (IDENTITY_COGNITIVE_PROMPT_VERSION if self.identity else COGNITIVE_PROMPT_VERSION),
             "parser_version": MODEL_RESPONSE_PARSER_VERSION,
             "raw_content": None,
             "parse_mode": None,
