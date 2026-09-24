@@ -1,8 +1,29 @@
 # Status
 
+## 0.2.0rc1 Pretorius release candidate
+
+The release-candidate branch now uses Pretorius schema 4, history artifact
+`pretorius-lived-history-v2`, importer `typed-prehistory-v2`, semantic-only
+association tags, source-aware history projection, and a shared auditable JSON
+response parser. The original v0.2 model-efficacy prompt-contract shape remains
+unchanged and now has an executable guard against accidental identity-context
+contamination.
+
+A frozen `pretorius-live-v1` harness adds a 2x2 identity-context by lived-history
+study with six fixed probes, two quiet ticks after each probe, orientation-free
+history arms, exact replay of clean trials, retained provider failures, and explicit
+evidence-eligibility requirements. No actual live-model efficacy or human-likeness
+result is claimed by this release candidate.
+
+Alpha Pretorius subject stores are not silently migrated. RC trials require fresh
+schema-4 databases.
+
+See `research/PRETORIUS_LIVE_PROTOCOL_V1.md` and
+`docs/RELEASE_CANDIDATE.md`.
+
 ## Pretorius lived-history variant
 
-A separate Pretorius-only schema-3 subject is now stacked on the v0.2 model-efficacy head. It imports a SHA-256 pinned, provenance-aware prehistory containing 47 memories, five relationship states, four beliefs, ten revisable narrative claims and five unresolved long-arc concerns. Screen canon, phenotype evidence, archived self-description, lived project history, relationship history and research history remain distinct memory kinds.
+A separate Pretorius-only schema-4 subject is now stacked on the v0.2 model-efficacy head. It imports a SHA-256 pinned, provenance-aware prehistory containing 47 memories, five relationship states, four beliefs, ten revisable narrative claims and five unresolved long-arc concerns. Screen canon, phenotype evidence, archived self-description, lived project history, relationship history and research history remain distinct memory kinds.
 
 The variant adds optional model-backed public expression downstream of the existing conduct selector. The public renderer receives only a qualitative SpeechView and cannot inspect engine telemetry, choose conduct, write memories or mutate world state. The v0.2 private-cognition prompt is byte-for-byte unchanged when no identity context is supplied, and generic v0.2 persistence does not carry Pretorius import metadata.
 
@@ -17,9 +38,7 @@ records every telemetry-free cognitive view and private output, and verifies exa
 closed-loop replay from captured thoughts. No unscripted model result is claimed
 yet. See `research/MODEL_EFFICACY_PROTOCOL.md`.
 
-# Status
-
-## v0.2 candidate: unattended endogenous cognition
+## Historical v0.2 candidate: unattended endogenous cognition
 
 Opt-in schema-2 SQLite runtime adds state-driven recurrence while the v0.1 runtime
 and frozen evidence remain available. See `ARCHITECTURE_V02.md` and

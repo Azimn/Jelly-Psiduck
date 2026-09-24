@@ -1,6 +1,6 @@
 # Pretorius lived-history variant
 
-This branch derives a Pretorius-specific subject from the stacked v0.2 model-efficacy head. It does not replace the Psiduck subject, alter the frozen v0.1 evidence, or change the v0.2 prompt contract when Pretorius mode is not selected. Pretorius uses a separate schema-3 SQLite store because the imported history manifest is part of his identity provenance.
+This branch derives a Pretorius-specific subject from the stacked v0.2 model-efficacy head. It does not replace the Psiduck subject, alter the frozen v0.1 evidence, or change the v0.2 prompt contract when Pretorius mode is not selected. Pretorius uses a separate schema-4 SQLite store because the imported history manifest is part of his identity provenance.
 
 ## Research premise
 
@@ -16,7 +16,9 @@ The current history artifact contains 47 memories, five relationship states, fou
 
 Recent collaboration with Jay is treated as lived project history because it occurred in the longitudinal Pretorius reconstruction work. The LoRA lineage, Agent-Pretorius, contextual recall work, model-swap observations, neural phenotype experiments, the realization that history may matter as much as structure, and this Jelly-Psiduck integration therefore exist as recent autobiographical episodes. Older film events remain separately typed as screen canon. Later interpretations of those events remain revisable self-model material rather than retroactively becoming canon.
 
-The history importer is deterministic and one-time. It requires a fresh subject, stores a SHA-256 digest of the source artifact in the Pretorius-only persistence envelope, rejects a changed artifact after import, backdates memories rather than replaying them as current perceptions, and places only six orientation memories in the initial subjective workspace. The rest must return through relevance or association.
+The release-candidate history artifact is `pretorius-lived-history-v2`. The importer is deterministic and one-time, records importer version `typed-prehistory-v2`, stores the canonical SHA-256 of the source artifact in the Pretorius-only persistence envelope, rejects changed import transforms or options after import, and backdates memories rather than replaying them as current perceptions. Provenance classes remain in `Memory.kind` but no longer enter associative tags, so evidence bookkeeping cannot create artificial memory clusters.
+
+Interactive Pretorius startup may still place the six declared orientation memories in the subjective workspace. The frozen live-study protocol explicitly disables that orientation so durable-history effects cannot be reduced to immediate working-memory priming. Pretorius also projects history kinds into qualitative source-aware recollections, distinguishing screen canon, archived self-report, phenotype evidence, legacy records, relationship episodes, and recent lived project history instead of presenting every record as the same kind of autobiographical memory.
 
 ## Public speech
 
@@ -46,4 +48,13 @@ JELLY_API_KEY is used only when the configured provider requires it. The --templ
 
 python -m jelly_psiduck.pretorius_evaluation is deliberately not a human-likeness benchmark. It creates a history-seeded Pretorius and a persona-only matched control, gives both the same current message from Jay with cognition silenced, and checks that only the seeded subject retrieves earlier Jay episodes and that the resulting existing conduct selector can choose differently. It also verifies exact restart and history-manifest persistence.
 
-The next scientific step is a preregistered live-model comparison across history-rich, persona-only, phenotype-only, and combined conditions using the same model and current interactions. Outcomes should include delayed relationship continuity, appropriate retrieval of old versus recent memories, contradiction preservation, spontaneous return to unresolved concerns, false-memory rate, private-thought diversity, action stability across model swaps, and blinded human judgments of longitudinal coherence. That later study should not be confused with the deterministic mechanism checks in this branch.
+The next scientific step is now frozen as `research/PRETORIUS_LIVE_PROTOCOL_V1.md`. It uses a clean 2x2 intervention: explicit identity context on or off crossed with durable lived history on or off, while the Pretorius cartridge and model are held constant. A LoRA "phenotype-only" arm is deliberately excluded from V1 because an actual adapter changes model parameters and requires a separate adapter-controlled protocol.
+
+V1 measures seeded-history utilization, source bounding, contradiction preservation, retrieval, conduct effects, parser reliability, and exact replay. It still does not establish acquired long-horizon path dependence. The stronger follow-up should fork initially identical subjects, expose them to different lived interactions, insert substantial intervening activity, then present identical later probes. Blinded human judgments and multiple model families remain necessary for broader longitudinal-coherence claims.
+
+## Release-candidate compatibility
+
+Pretorius RC stores use schema 4. The default history artifact is v2, and the importer
+transform is part of persisted provenance. Existing alpha Pretorius databases should
+remain untouched and a fresh database should be used for RC trials. This is an
+intentional research-integrity boundary rather than an automatic migration.

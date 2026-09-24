@@ -13,6 +13,12 @@ changing the harness. After the first accepted live-model result, do not change 
 case set, prompt contract or scoring under the same protocol identifier. Increment
 the protocol version instead. Never persist API keys or endpoint URLs in evidence.
 
+For Pretorius live-model trials also read research/PRETORIUS_LIVE_PROTOCOL_V1.md.
+Protocol-v1 evidence must use history v2 with the pinned digest and importer,
+workspace orientation disabled, all four fixed 2x2 conditions, the fixed probe
+order, at least three replicates per condition, and an immutable model fingerprint.
+Do not relabel development or transport-diagnostic runs as evidence.
+
 - Persona-and-Jelly remains the organism foundation and sole conduct authority.
 - The engine simulates the organism; the subject experiences the consequences.
 - Cognition receives only immutable subjective views, never engine telemetry.
@@ -31,3 +37,6 @@ Verification: `python -m pytest -q` and
 For v0.2 also run `python -m jelly_psiduck.endogenous_evaluation --output evidence/local-v02.json`.
 
 For the stacked efficacy harness also run `python -m jelly_psiduck.model_evaluation --dry-run --case unresolved-mara --case body-hunger --ticks 8 --output evidence/local-model-harness.json`.
+
+For the Pretorius release-candidate harness also run:
+`python -m jelly_psiduck.pretorius_live --dry-run --replicates 1 --output evidence/local-pretorius-live.json`.

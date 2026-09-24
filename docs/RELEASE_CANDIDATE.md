@@ -1,0 +1,57 @@
+# Jelly-Psiduck 0.2.0rc1
+
+This release candidate is the first Pretorius build intended for controlled
+live-model trials rather than only deterministic mechanism checks.
+
+## Release-candidate changes
+
+The Pretorius persistence envelope is schema 4. The default prehistory is
+`pretorius-lived-history-v2`, pinned by canonical SHA-256 and importer version.
+Provenance remains explicit in memory kinds but no longer participates as an
+associative tag. This removes a retrieval confound in which records could become
+related merely because they shared an evidence class.
+
+History can now be imported without workspace orientation. The frozen live-study
+protocol uses that mode so the treatment is durable state rather than six relevant
+records preloaded into working memory. Source classes also survive the subjective
+firewall as qualitative distinctions, so screen canon, legacy representation,
+archived self-report, phenotype evidence, and lived project history are not all
+rendered as equivalent autobiographical recollection.
+
+Private and public model responses use the auditable
+`single-text-json-v1` parser. It accepts exact JSON or one complete JSON code
+fence and performs no semantic repair. Raw output, parse mode, and failure type are
+available to study recorders. Public speech no longer receives the internal subject
+identifier.
+
+The frozen v0.2 model-efficacy harness now rejects identity-bearing or otherwise
+mutated prompts before provider invocation while preserving its original prompt
+contract and evidence shape.
+
+The new `pretorius-live-v1` harness freezes a 2x2 study of explicit identity
+context and durable lived history, with the cartridge and model held constant.
+History arms disable workspace orientation. Six fixed probes test continuity,
+self-contradiction, creator autonomy, collaborator disagreement, source bounding,
+and path-dependence reasoning. Clean runs must exact-replay.
+
+## Compatibility
+
+Do not open an alpha Pretorius database as an RC subject. Schema 4 intentionally
+requires a fresh store. The older history artifact remains in the repository for
+provenance, but v2 is the RC default.
+
+Generic v0.1 and v0.2 subject contracts remain separate. The frozen v0.2
+model-efficacy prompt text, cases, temperature, token ceiling, and scoring are not
+silently repurposed for Pretorius.
+
+## Claim boundary
+
+The deterministic engineering checks can establish causal use of stored history,
+source separation, persistence, and replayability. They do not establish
+human-likeness or consciousness. The live V1 study tests utilization of curated
+seeded history. Acquired long-horizon path dependence still requires a later
+forked-life experiment in which initially identical subjects accumulate different
+experiences before receiving identical delayed probes.
+
+No live-model Pretorius result has been accepted as evidence at the time this
+release candidate is defined.
