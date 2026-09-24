@@ -229,17 +229,22 @@ def test_open_commitment_transitively_protects_supporting_memory(tmp_path):
     host, _ = open_pretorius_v03(tmp_path / "pretorius-v03.db")
     host.message("Jay", "I will send the dataset tomorrow.")
     host.heartbeat()
-    memory_id = host.inspect()["autobiographical_events"][-1]["memory_links"][0]
 
     with host._transaction():
         record = host.continuity.state.epistemic_records[-1]
+        active_ids = {memory.id for memory in host.engine.state.memories}
+        supporting_memory = next(
+            evidence_id
+            for evidence_id in record.evidence_ids
+            if evidence_id in active_ids
+        )
         commitment = host.continuity.create_commitment(
             "Jay",
             "Send the dataset tomorrow.",
             tick=host.engine.state.tick,
             evidence_ids=(record.id,),
         )
-        assert memory_id in host._protected_ids()
+        assert supporting_memory in host._protected_ids()
         assert commitment.status == "open"
 
 
