@@ -23,17 +23,19 @@ def test_history_import_is_persisted_and_idempotent(tmp_path):
     host, first = open_pretorius(tmp_path / "pretorius.db")
 
     assert first["already_present"] is False
-    assert first["memory_count"] == 57
+    assert first["memory_count"] == 47
     assert first["relationship_count"] == 5
     snapshot = host.inspect()
     assert "pretorius-lived-history-v1" in snapshot["history_imports"]
     assert snapshot["engine"]["relationships"]["Jay"]["familiarity"] == pytest.approx(.95)
-    assert len(snapshot["engine"]["memories"]) == 57
+    assert "Elizabeth" in snapshot["engine"]["relationships"]
+    assert any(memory["id"].endswith(":foundation-tower-continuity") for memory in snapshot["engine"]["memories"])
+    assert len(snapshot["engine"]["memories"]) == 47
 
     reopened, second = open_pretorius(tmp_path / "pretorius.db")
     assert second["already_present"] is True
     assert reopened.inspect()["history_imports"] == snapshot["history_imports"]
-    assert len(reopened.inspect()["engine"]["memories"]) == 57
+    assert len(reopened.inspect()["engine"]["memories"]) == 47
 
 
 def test_jay_message_retrieves_actual_shared_history(tmp_path):
@@ -60,6 +62,9 @@ def test_history_keeps_source_classes_distinct(tmp_path):
     assert "history:lived_project_history" in kinds
     assert "history:relationship_history" in kinds
     assert "history:research_history" in kinds
+    assert "history:expanded_autobiography" in kinds
+    assert "history:foundational_self_memory" in kinds
+    assert "history:legacy_awareness" in kinds
 
 
 def test_model_renderer_receives_no_engine_telemetry_and_cannot_choose_conduct(tmp_path):
@@ -94,8 +99,8 @@ def test_history_import_rejects_changed_artifact_after_seed(tmp_path):
     altered = tmp_path / "altered.json"
     text = DEFAULT_HISTORY.read_text(encoding="utf-8")
     altered.write_text(text.replace(
-        '"description": "A typed reconstruction history',
-        '"description": "A changed reconstruction history'
+        '"description": "A provenance-aware Pretorius reconstruction history',
+        '"description": "A changed Pretorius reconstruction history'
     ), encoding="utf-8")
 
     with pytest.raises(ValueError, match="changed after import"):
