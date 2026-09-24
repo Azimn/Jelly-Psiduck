@@ -130,3 +130,17 @@ python -m jelly_psiduck.model_evaluation --endpoint http://localhost:11434/v1 --
 
 No endpoint URL or API key is stored in the evidence. See
 `research/MODEL_EFFICACY_PROTOCOL.md` before treating any live-model run as evidence.
+
+## Pretorius lived-history variant
+
+A separate Pretorius research entry point seeds the v0.2 organism with a typed longitudinal history instead of relying on a persona sheet alone. It preserves screen canon, phenotype evidence, later self-description, actual reconstruction history, relationship episodes and research history as distinct evidence classes. The LoRA corpus is treated as phenotype evidence rather than as hundreds of invented autobiographical events.
+
+With an OpenAI-compatible model configured, Pretorius uses the model for private cognition and for public wording. The organism still selects conduct first, and public rendering receives no raw engine telemetry or private thought text. Without a model, the same history, body, relationships, memory, concern recurrence and deterministic cartridge speech remain testable.
+
+~~~bash
+python -m jelly_psiduck.pretorius init
+python -m jelly_psiduck.pretorius_evaluation
+python -m jelly_psiduck.pretorius --endpoint http://localhost:11434/v1 --model YOUR_MODEL chat
+~~~
+
+See research/PRETORIUS_LIVED_HISTORY.md for the provenance model, limitations and live-model study design.
