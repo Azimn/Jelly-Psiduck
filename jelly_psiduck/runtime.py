@@ -27,6 +27,7 @@ from digital_subject.models import Action, Consequence, Event
 from .cognition import ReflectiveCognition
 from .firewall import body_experiences, remembered
 from .organism import Organism
+from .speech import build_speech_view
 from .workspace import SubjectiveWorkspace, Thought
 
 
@@ -51,18 +52,20 @@ class UnifiedSubject:
     SCHEMA = 1
     CONFIG_TYPE = ExperimentConfig
     ENGINE_TYPE = Organism
+    CONTINUITY_TYPE = SubjectContinuity
 
-    def __init__(self, path: str | Path, cartridge: Cartridge, *, cognition=None,
+    def __init__(self, path: str | Path, cartridge: Cartridge, *, cognition=None, renderer=None,
                  config: ExperimentConfig | None = None, subject_id="subject-001"):
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.cartridge = cartridge
         self.cognition = cognition if cognition is not None else ReflectiveCognition()
+        self.renderer = renderer
         self.config = config or self.CONFIG_TYPE()
         self.fingerprint = hashlib.sha256(json.dumps(asdict(cartridge), sort_keys=True).encode()).hexdigest()
         self._lock = threading.RLock()
         self.engine = self.ENGINE_TYPE.from_cartridge(cartridge, subject_id)
-        self.continuity = SubjectContinuity()
+        self.continuity = self.CONTINUITY_TYPE()
         self.workspace = SubjectiveWorkspace()
         self.workspace.add(0, "memory", f"I know myself as {cartridge.display_name}. "
                            + str(cartridge.identity.get("summary", "")), generated_by="cartridge")
@@ -96,7 +99,7 @@ class UnifiedSubject:
             raise ValueError("unsupported schema or changed cartridge; explicit migration required")
         self.config = self.CONFIG_TYPE(**raw["config"])
         self.engine = self.ENGINE_TYPE.from_dict(raw["engine"], self.cartridge)
-        self.continuity = SubjectContinuity(ContinuityState.from_dict(raw["continuity"]))
+        self.continuity = self.CONTINUITY_TYPE(ContinuityState.from_dict(raw["continuity"]))
         self.workspace = SubjectiveWorkspace.from_dict(raw["workspace"])
         self.pending = raw["pending"]
         self.cooldowns = raw["cooldowns"]
@@ -165,6 +168,7 @@ class UnifiedSubject:
         fresh_body = self._project_body()
 
         last_event = None
+        last_packet = None
         incoming, self.pending = self.pending[:8], self.pending[8:]
         for raw in incoming:
             event = Event(**{**raw, "tags": tuple(raw["tags"])})
@@ -172,6 +176,7 @@ class UnifiedSubject:
             influence = derive_continuity_influence(self.continuity, event, tick=state.tick)
             apply_continuity_influence(state, influence, tick=state.tick)
             packet = self.engine.step(event, advance_time=False, choose_conduct=False)
+            last_packet = packet
             links = packet.private_content["matched_memory_ids"]
             social = event.source not in {"world", "environment", "system", "self"}
             text = (f"I hear {event.source} say: {event.description}" if event.kind == "message"
@@ -180,7 +185,7 @@ class UnifiedSubject:
                              concepts=event.tags, memory_links=links)
             self.continuity.observe(event, tick=state.tick, interpretation=text, evidence_ids=links)
             for memory in self.engine._memories_by_ids(links):
-                self._add("memory", remembered(memory), memory_links=(memory.id,), generated_by=item.id)
+                self._add("memory", self._remember(memory), memory_links=(memory.id,), generated_by=item.id)
 
         temporal = self._project_temporal()
 
@@ -215,11 +220,8 @@ class UnifiedSubject:
         # is never copied into public speech, including conceal/deflect cases.
         if incoming and action in {Action.ANSWER, Action.ASK, Action.REPAIR, Action.CHALLENGE,
                                    Action.DEFLECT, Action.APPROACH}:
-            options = self.cartridge.dialogue.get(action.value, ())
-            if options:
-                speech = options[0].format(name=state.display_name, topic="what I heard",
-                    memory="what I remember", experience="what I experienced",
-                    relationship="how I feel about this", need="what I need", activity=action.value)
+            speech = self._render_public(last_packet, action, last_event)
+            if speech:
                 self.engine.record_expression(speech)
         if not incoming:
             activity = self.engine.finish_silent_activity(action)
@@ -229,6 +231,57 @@ class UnifiedSubject:
         self._trace({"kind": "heartbeat", "action": action.value, "thoughts": thought_ids,
                      "experience_count": self.workspace.sequence - start, "speech": speech})
         return {"tick": state.tick, "action": action.value, "speech": speech, "thoughts": thought_ids}
+
+    def _remember(self, memory):
+        """Project a stored memory into subjective language. Subclasses may preserve provenance."""
+        return remembered(memory)
+
+    def _public_memory(self, memory):
+        """Project a memory for public wording without changing generic v0.2 behavior."""
+        return memory.meaning
+
+    def _render_public(self, packet, action, event):
+        """Render wording after conduct selection without exposing private telemetry."""
+        if packet is not None and event is not None and self.renderer is not None:
+            memory_context = tuple(
+                record.first_person
+                for record in self.workspace.records
+                if record.source == "memory"
+            )[-4:]
+            view = build_speech_view(
+                packet,
+                action=action,
+                user_input=event.description,
+                identity=self.cartridge.identity,
+                memory_context=memory_context,
+                relevant_memories=tuple(
+                    self._public_memory(memory)
+                    for memory in self.engine._memories_by_ids(
+                        packet.private_content["matched_memory_ids"]
+                    )
+                ),
+            )
+            try:
+                text = self.renderer.render(view)
+                if isinstance(text, str) and 0 < len(text.strip()) <= 4000:
+                    return text.strip()
+                if text is not None:
+                    raise ValueError("renderer returned invalid speech")
+            except Exception as exc:
+                self._trace({"kind": "render_error", "error_type": type(exc).__name__})
+
+        options = self.cartridge.dialogue.get(action.value, ())
+        if not options:
+            return None
+        return options[0].format(
+            name=self.engine.state.display_name,
+            topic="what I heard",
+            memory="what I remember",
+            experience="what I experienced",
+            relationship="how I feel about this",
+            need="what I need",
+            activity=action.value,
+        )
 
     def _project_body(self):
         state = self.engine.state
@@ -274,7 +327,7 @@ class UnifiedSubject:
             c.status == "overdue" for c in self.continuity.state.commitments.values()))
         if revisit and self.attention and self.config.memory_feedback:
             for memory in self.engine.recall(self.attention):
-                self._add("memory", remembered(memory), memory_links=(memory.id,), generated_by="attention")
+                self._add("memory", self._remember(memory), memory_links=(memory.id,), generated_by="attention")
         warranted = bool(incoming) or fresh_body or temporal or revisit
         return warranted
 
@@ -292,7 +345,7 @@ class UnifiedSubject:
         memories = self.engine.recall(cues)
         effects = []
         for memory in memories:
-            self._add("memory", remembered(memory), memory_links=(memory.id,), generated_by=thought.id)
+            self._add("memory", self._remember(memory), memory_links=(memory.id,), generated_by=thought.id)
             key = f"recall:{memory.id}"
             if self.config.thought_effects and self._ready(key):
                 pressure, delta = self.engine.appraise_recollection(memory)

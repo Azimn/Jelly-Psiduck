@@ -21,6 +21,8 @@ jobs:
       - run: python -m jelly_psiduck.evaluation --output evidence/ci-inner-ear.json
       - run: python -m jelly_psiduck.endogenous_evaluation --output evidence/ci-endogenous.json
       - run: python -m jelly_psiduck.model_evaluation --dry-run --case unresolved-mara --case body-hunger --ticks 8 --output evidence/ci-model-harness.json
+      - run: python -m jelly_psiduck.pretorius_evaluation --output evidence/ci-pretorius-history.json
+      - run: python -m jelly_psiduck.pretorius_live --dry-run --replicates 1 --output evidence/ci-pretorius-live.json
       - uses: actions/upload-artifact@v4
         with:
           name: inner-ear-${{ matrix.python-version }}
@@ -28,3 +30,5 @@ jobs:
             evidence/ci-inner-ear.json
             evidence/ci-endogenous.json
             evidence/ci-model-harness.json
+            evidence/ci-pretorius-history.json
+            evidence/ci-pretorius-live.json

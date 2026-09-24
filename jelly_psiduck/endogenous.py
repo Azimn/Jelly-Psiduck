@@ -8,7 +8,7 @@ from dataclasses import asdict, dataclass
 
 from digital_subject.models import Concern
 
-from .firewall import LOW_IS_BAD, NEED_LANGUAGE, remembered
+from .firewall import LOW_IS_BAD, NEED_LANGUAGE
 from .organism import Organism
 from .runtime import ExperimentConfig, UnifiedSubject, concepts
 from .semantics import interpret, ThoughtMeaning
@@ -179,7 +179,7 @@ class EndogenousSubject(UnifiedSubject):
             del self.endogenous["drift"][key]
             if item["activation"] >= .2:
                 memory = live_memories[key]
-                self._add("memory", remembered(memory), memory_links=(key, item["from_memory"]),
+                self._add("memory", self._remember(memory), memory_links=(key, item["from_memory"]),
                           generated_by=item["thought"])
                 self.trigger = {"kind": "association", "parents": [item["thought"], item["from_memory"], key], "depth": item["depth"]}
                 self._trace({"kind": "cognition_trigger", "trigger": self.trigger})
@@ -234,7 +234,7 @@ class EndogenousSubject(UnifiedSubject):
         memories = self.engine.recall(cues)[:1] if self.config.memory_feedback else []
         effects = []
         for memory in memories:
-            self._add("memory", remembered(memory), memory_links=(memory.id,), generated_by=thought.id)
+            self._add("memory", self._remember(memory), memory_links=(memory.id,), generated_by=thought.id)
             if self.config.thought_effects and self._ready("recall:" + memory.id):
                 key, delta = self.engine.appraise_recollection(memory)
                 effects.append({"channel": "memory", "memory": memory.id, "pressure": key, "delta": delta})

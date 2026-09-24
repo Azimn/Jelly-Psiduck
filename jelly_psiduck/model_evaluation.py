@@ -26,6 +26,7 @@ from .cognition import (
     COGNITIVE_PROMPT_VERSION,
     DEFAULT_MAX_TOKENS,
     DEFAULT_TEMPERATURE,
+    MODEL_RESPONSE_PARSER_VERSION,
     OpenAICompatibleCognition,
     cognitive_prompt,
 )
@@ -57,6 +58,10 @@ def _view_hash(view: CognitiveView) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
+class ProtocolContractError(RuntimeError):
+    pass
+
+
 class RecordingCognition:
     """Wrap a provider and retain only synthetic trial inputs and private outputs."""
 
@@ -65,15 +70,26 @@ class RecordingCognition:
         self.calls: list[dict] = []
 
     def think(self, view: CognitiveView):
-        prompt = cognitive_prompt(view)
+        expected_prompt = cognitive_prompt(view)
+        actual_prompt = (
+            self.provider.prompt_for(view)
+            if callable(getattr(self.provider, "prompt_for", None))
+            else expected_prompt
+        )
         row = {
             "index": len(self.calls),
             "view_sha256": _view_hash(view),
-            "prompt_sha256": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
+            "prompt_sha256": hashlib.sha256(actual_prompt.encode("utf-8")).hexdigest(),
             "view": _view_payload(view),
             "thought": None,
             "error_type": None,
         }
+        if actual_prompt != expected_prompt:
+            row["error_type"] = "ProtocolContractError"
+            self.calls.append(row)
+            raise ProtocolContractError(
+                "v02-model-efficacy-v1 forbids identity context or prompt mutation"
+            )
         try:
             result = self.provider.think(view)
         except Exception as exc:
@@ -401,6 +417,11 @@ def evaluate(
         "telemetry_free_views": all(trial["view_contract_ok"] for trial in trials),
         "thoughts_have_no_world_authority": all(trial["authority_ok"] for trial in trials),
         "provider_contract_clean": all(trial["metrics"]["provider_errors"] == 0 for trial in trials),
+        "frozen_prompt_contract": all(
+            call.get("error_type") != "ProtocolContractError"
+            for trial in trials
+            for call in trial["calls"]
+        ),
         "clean_trials_replay_exactly": all(trial["replay_equal"] is True for trial in trials),
     }
     return {
@@ -411,6 +432,10 @@ def evaluate(
             "version": COGNITIVE_PROMPT_VERSION,
             "temperature": DEFAULT_TEMPERATURE,
             "max_tokens": DEFAULT_MAX_TOKENS,
+        },
+        "response_parser": {
+            "version": MODEL_RESPONSE_PARSER_VERSION,
+            "accepted_wrappers": ["json", "fenced_json"],
         },
         "cases": list(cases),
         "ticks_per_trial": ticks,

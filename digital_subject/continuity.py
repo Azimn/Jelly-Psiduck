@@ -140,6 +140,15 @@ class SubjectContinuity:
         self.record_limit = max(16, int(record_limit))
         self.insight_limit = max(8, int(insight_limit))
 
+    def _new_id(self, kind: str) -> str:
+        """Generate an opaque ledger identifier.
+
+        The generic ledger intentionally preserves its historical UUID behavior.
+        Specialized subjects may override this hook when deterministic replay is
+        part of their experimental contract.
+        """
+        return str(uuid.uuid4())
+
     def observe(
         self,
         event: Event,
@@ -153,7 +162,7 @@ class SubjectContinuity:
         perceived = str(metadata.get("perceived_record") or event.description)
         confidence = _clamp(metadata.get("interpretation_confidence", 0.55))
         record = EpistemicRecord(
-            id=str(uuid.uuid4()),
+            id=self._new_id("record"),
             tick=int(tick),
             source=str(event.source),
             objective_record=objective,
@@ -193,7 +202,7 @@ class SubjectContinuity:
     ) -> EpistemicRecord:
         original = self._record(record_id)
         revision = EpistemicRecord(
-            id=str(uuid.uuid4()),
+            id=self._new_id("record"),
             tick=int(tick),
             source="revision",
             objective_record=original.objective_record,
@@ -256,7 +265,7 @@ class SubjectContinuity:
         expectation_id: str | None = None,
     ) -> Expectation:
         item = Expectation(
-            id=expectation_id or str(uuid.uuid4()),
+            id=expectation_id or self._new_id("expectation"),
             proposition=str(proposition),
             created_tick=int(tick),
             due_tick=None if due_tick is None else int(due_tick),
@@ -306,7 +315,7 @@ class SubjectContinuity:
         commitment_id: str | None = None,
     ) -> Commitment:
         item = Commitment(
-            id=commitment_id or str(uuid.uuid4()),
+            id=commitment_id or self._new_id("commitment"),
             actor=str(actor),
             description=str(description),
             beneficiary=str(beneficiary),
@@ -472,7 +481,7 @@ class SubjectContinuity:
         trigger: str,
     ) -> ReflectionInsight:
         item = ReflectionInsight(
-            id=str(uuid.uuid4()),
+            id=self._new_id("insight"),
             kind=str(kind),
             proposition=str(proposition),
             confidence=_clamp(confidence),

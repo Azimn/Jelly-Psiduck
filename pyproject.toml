@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "jelly-psiduck"
-version = "0.2.0a2"
+version = "0.2.0rc1"
 description = "A persistent organism with a first-person workspace and causal inner speech"
 requires-python = ">=3.11"
 dependencies = []
@@ -15,12 +15,14 @@ test = ["pytest>=8"]
 
 [project.scripts]
 jelly-psiduck = "jelly_psiduck.cli:main"
+jelly-pretorius = "jelly_psiduck.pretorius:main"
+jelly-pretorius-study = "jelly_psiduck.pretorius_live:main"
 
 [tool.setuptools.packages.find]
 include = ["digital_subject*", "jelly_psiduck*"]
 
 [tool.setuptools.package-data]
-jelly_psiduck = ["cartridges/*.toml"]
+jelly_psiduck = ["cartridges/*.toml", "histories/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

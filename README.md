@@ -130,3 +130,46 @@ python -m jelly_psiduck.model_evaluation --endpoint http://localhost:11434/v1 --
 
 No endpoint URL or API key is stored in the evidence. See
 `research/MODEL_EFFICACY_PROTOCOL.md` before treating any live-model run as evidence.
+
+## Pretorius lived-history release candidate
+
+The Pretorius branch is packaged as `0.2.0rc1`. Its default subject schema is 4
+and its default history artifact is `pretorius-lived-history-v2`. Alpha-era
+Pretorius databases are intentionally not migrated in place; create a fresh database
+for the release candidate so importer and provenance semantics cannot silently change.
+
+## Pretorius lived-history variant
+
+A separate Pretorius research entry point seeds the v0.2 organism with a typed longitudinal history instead of relying on a persona sheet alone. It preserves screen canon, phenotype evidence, later self-description, actual reconstruction history, relationship episodes and research history as distinct evidence classes. The LoRA corpus is treated as phenotype evidence rather than as hundreds of invented autobiographical events.
+
+With an OpenAI-compatible model configured, Pretorius uses the model for private cognition and for public wording. The organism still selects conduct first, and public rendering receives no raw engine telemetry or private thought text. Without a model, the same history, body, relationships, memory, concern recurrence and deterministic cartridge speech remain testable.
+
+~~~bash
+python -m jelly_psiduck.pretorius init
+python -m jelly_psiduck.pretorius_evaluation
+python -m jelly_psiduck.pretorius --endpoint http://localhost:11434/v1 --model YOUR_MODEL chat
+~~~
+
+See research/PRETORIUS_LIVED_HISTORY.md for the provenance model, limitations and live-model study design.
+
+### Frozen Pretorius live-study harness
+
+The release candidate includes a transport-free smoke run for the frozen
+`pretorius-live-v1` 2x2 study:
+
+```bash
+python -m jelly_psiduck.pretorius_live --dry-run --replicates 1 --output evidence/pretorius-live-smoke.json
+```
+
+A live local-model run uses the same model for private cognition and public wording.
+Three replicates and an immutable model fingerprint are required before the output
+is marked evidence-eligible:
+
+```bash
+python -m jelly_psiduck.pretorius_live --endpoint http://localhost:11434/v1 --model YOUR_MODEL --model-fingerprint YOUR_IMMUTABLE_BUILD_ID --output evidence/pretorius-live-v1.json
+```
+
+The live protocol disables history workspace orientation, records parser failures
+rather than hiding them, and exact-replays every clean trial. It tests seeded-history
+utilization, not consciousness or full acquired long-horizon path dependence. See
+`research/PRETORIUS_LIVE_PROTOCOL_V1.md`.

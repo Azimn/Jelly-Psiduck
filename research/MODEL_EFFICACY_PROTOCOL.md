@@ -62,3 +62,16 @@ can be changed without changing the organism. A single model is not sufficient t
 support a renderer-independent claim. Comparative work should eventually include
 more than one model family and should report the exact model identifiers and local
 runtime configuration used for each run.
+
+## Release-candidate contract guard
+
+Before any protocol-v1 live-model result was accepted as evidence, the release
+candidate added an executable guard around this harness. A provider whose actual
+prompt includes identity context or otherwise differs from the frozen identity-free
+prompt is rejected before the network call with a protocol-contract error.
+
+Response parsing is recorded separately from the frozen `prompt_contract` object.
+Parser `single-text-json-v1` accepts exact one-field JSON or one complete Markdown
+JSON fence around it. This pre-evidence hardening did not change the seven cases,
+private prompt wording, temperatures, token ceiling, runtime thresholds, or scoring.
+The original three-field prompt-contract evidence shape remains unchanged.
