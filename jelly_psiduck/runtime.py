@@ -27,6 +27,7 @@ from digital_subject.models import Action, Consequence, Event
 from .cognition import ReflectiveCognition
 from .firewall import body_experiences, remembered
 from .organism import Organism
+from .speech import build_speech_view
 from .workspace import SubjectiveWorkspace, Thought
 
 
@@ -52,12 +53,13 @@ class UnifiedSubject:
     CONFIG_TYPE = ExperimentConfig
     ENGINE_TYPE = Organism
 
-    def __init__(self, path: str | Path, cartridge: Cartridge, *, cognition=None,
+    def __init__(self, path: str | Path, cartridge: Cartridge, *, cognition=None, renderer=None,
                  config: ExperimentConfig | None = None, subject_id="subject-001"):
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.cartridge = cartridge
         self.cognition = cognition if cognition is not None else ReflectiveCognition()
+        self.renderer = renderer
         self.config = config or self.CONFIG_TYPE()
         self.fingerprint = hashlib.sha256(json.dumps(asdict(cartridge), sort_keys=True).encode()).hexdigest()
         self._lock = threading.RLock()
@@ -71,6 +73,7 @@ class UnifiedSubject:
         self.noticed = {}
         self.trace = []
         self.attention = ()
+        self.history_imports = {}
         self.last_clock = None
         self.clock_remainder = 0.0
         with closing(self._connect()) as db:
@@ -89,6 +92,7 @@ class UnifiedSubject:
                 "continuity": self.continuity.state.to_dict(), "workspace": self.workspace.to_dict(),
                 "pending": self.pending, "cooldowns": self.cooldowns, "noticed": self.noticed,
                 "trace": self.trace, "attention": self.attention,
+                "history_imports": self.history_imports,
                 "last_clock": self.last_clock, "clock_remainder": self.clock_remainder}
 
     def _restore(self, raw):
@@ -103,6 +107,7 @@ class UnifiedSubject:
         self.noticed = raw["noticed"]
         self.trace = raw["trace"]
         self.attention = tuple(raw["attention"])
+        self.history_imports = dict(raw.get("history_imports", {}))
         self.last_clock = raw["last_clock"]
         self.clock_remainder = raw["clock_remainder"]
 
@@ -165,6 +170,7 @@ class UnifiedSubject:
         fresh_body = self._project_body()
 
         last_event = None
+        last_packet = None
         incoming, self.pending = self.pending[:8], self.pending[8:]
         for raw in incoming:
             event = Event(**{**raw, "tags": tuple(raw["tags"])})
@@ -172,6 +178,7 @@ class UnifiedSubject:
             influence = derive_continuity_influence(self.continuity, event, tick=state.tick)
             apply_continuity_influence(state, influence, tick=state.tick)
             packet = self.engine.step(event, advance_time=False, choose_conduct=False)
+            last_packet = packet
             links = packet.private_content["matched_memory_ids"]
             social = event.source not in {"world", "environment", "system", "self"}
             text = (f"I hear {event.source} say: {event.description}" if event.kind == "message"
@@ -215,11 +222,8 @@ class UnifiedSubject:
         # is never copied into public speech, including conceal/deflect cases.
         if incoming and action in {Action.ANSWER, Action.ASK, Action.REPAIR, Action.CHALLENGE,
                                    Action.DEFLECT, Action.APPROACH}:
-            options = self.cartridge.dialogue.get(action.value, ())
-            if options:
-                speech = options[0].format(name=state.display_name, topic="what I heard",
-                    memory="what I remember", experience="what I experienced",
-                    relationship="how I feel about this", need="what I need", activity=action.value)
+            speech = self._render_public(last_packet, action, last_event)
+            if speech:
                 self.engine.record_expression(speech)
         if not incoming:
             activity = self.engine.finish_silent_activity(action)
@@ -229,6 +233,43 @@ class UnifiedSubject:
         self._trace({"kind": "heartbeat", "action": action.value, "thoughts": thought_ids,
                      "experience_count": self.workspace.sequence - start, "speech": speech})
         return {"tick": state.tick, "action": action.value, "speech": speech, "thoughts": thought_ids}
+
+    def _render_public(self, packet, action, event):
+        """Render wording after conduct selection without exposing private telemetry."""
+        if packet is not None and event is not None and self.renderer is not None:
+            memory_context = tuple(
+                record.first_person
+                for record in self.workspace.records
+                if record.source == "memory"
+            )[-4:]
+            view = build_speech_view(
+                packet,
+                action=action,
+                user_input=event.description,
+                identity=self.cartridge.identity,
+                memory_context=memory_context,
+            )
+            try:
+                text = self.renderer.render(view)
+                if isinstance(text, str) and 0 < len(text.strip()) <= 4000:
+                    return text.strip()
+                if text is not None:
+                    raise ValueError("renderer returned invalid speech")
+            except Exception as exc:
+                self._trace({"kind": "render_error", "error_type": type(exc).__name__})
+
+        options = self.cartridge.dialogue.get(action.value, ())
+        if not options:
+            return None
+        return options[0].format(
+            name=self.engine.state.display_name,
+            topic="what I heard",
+            memory="what I remember",
+            experience="what I experienced",
+            relationship="how I feel about this",
+            need="what I need",
+            activity=action.value,
+        )
 
     def _project_body(self):
         state = self.engine.state
