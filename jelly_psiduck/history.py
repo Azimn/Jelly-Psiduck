@@ -117,7 +117,6 @@ def seed_history(subject, path: str | Path) -> dict[str, Any]:
                 raise ValueError(f"history memory {record_id} requires summary and first_person")
             age = max(0, int(item.get("age_ticks", 0)))
             tags = tuple(dict.fromkeys((
-                "history",
                 evidence_class,
                 *(str(tag) for tag in item.get("tags", []) if str(tag).strip()),
             )))
