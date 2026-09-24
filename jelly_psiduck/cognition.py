@@ -27,25 +27,36 @@ class ReflectiveCognition:
         return None
 
 
-def cognitive_prompt(view: CognitiveView) -> str:
-    return (
+def cognitive_prompt(view: CognitiveView, identity: dict | None = None) -> str:
+    base = (
         "These are my experiences. Memories can be uncertain; thoughts and imagination "
         "are not observations. Consider one private thought or remain silent. "
         "Return only JSON with a single field text (string or null). "
         "Do not issue actions or speak to anyone.\n"
         + json.dumps(asdict(view), ensure_ascii=False)
     )
+    if not identity:
+        return base
+    return (
+        "This is enduring self-context, not a new event. Use it as identity orientation, "
+        "but do not turn it into an observation or invent missing biography.\n"
+        + json.dumps(identity, ensure_ascii=False, sort_keys=True)
+        + "\n"
+        + base
+    )
 
 
 class OpenAICompatibleCognition:
     """Explicitly configured chat-completions transport, no mandatory model service."""
-    def __init__(self, endpoint: str, model: str, api_key: str = "", timeout: float = 30):
+    def __init__(self, endpoint: str, model: str, api_key: str = "", timeout: float = 30,
+                 identity: dict | None = None):
         self.endpoint = endpoint.rstrip("/") + "/chat/completions"
         self.model, self.api_key, self.timeout = model, api_key, timeout
+        self.identity = dict(identity) if identity else None
 
     def think(self, view: CognitiveView) -> Thought | None:
         data = json.dumps({"model": self.model, "messages": [
-            {"role": "user", "content": cognitive_prompt(view)}],
+            {"role": "user", "content": cognitive_prompt(view, self.identity)}],
             "max_tokens": DEFAULT_MAX_TOKENS, "temperature": DEFAULT_TEMPERATURE}).encode()
         headers = {"Content-Type": "application/json"}
         if self.api_key:
