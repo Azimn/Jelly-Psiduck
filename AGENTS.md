@@ -8,6 +8,11 @@ research/V02_RESULTS.md. v0.1 remains a frozen comparison apparatus. New behavio
 uses the explicit v0.2 runtime and separate schema-2 SQLite stores; never silently
 migrate the default v0.1 runtime or overwrite its frozen experimental evidence.
 
+For unscripted-provider trials also read research/MODEL_EFFICACY_PROTOCOL.md before
+changing the harness. After the first accepted live-model result, do not change the
+case set, prompt contract or scoring under the same protocol identifier. Increment
+the protocol version instead. Never persist API keys or endpoint URLs in evidence.
+
 - Persona-and-Jelly remains the organism foundation and sole conduct authority.
 - The engine simulates the organism; the subject experiences the consequences.
 - Cognition receives only immutable subjective views, never engine telemetry.
@@ -24,3 +29,5 @@ migrate the default v0.1 runtime or overwrite its frozen experimental evidence.
 Verification: `python -m pytest -q` and
 `python -m jelly_psiduck.evaluation --output evidence/local-inner-ear.json`.
 For v0.2 also run `python -m jelly_psiduck.endogenous_evaluation --output evidence/local-v02.json`.
+
+For the stacked efficacy harness also run `python -m jelly_psiduck.model_evaluation --dry-run --case unresolved-mara --case body-hunger --ticks 8 --output evidence/local-model-harness.json`.

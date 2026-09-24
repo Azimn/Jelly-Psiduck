@@ -1,5 +1,14 @@
 # Status
 
+## Stacked model-efficacy harness
+
+A separate candidate branch now freezes a synthetic unscripted-provider protocol,
+records every telemetry-free cognitive view and private output, and verifies exact
+closed-loop replay from captured thoughts. No unscripted model result is claimed
+yet. See `research/MODEL_EFFICACY_PROTOCOL.md`.
+
+# Status
+
 ## v0.2 candidate: unattended endogenous cognition
 
 Opt-in schema-2 SQLite runtime adds state-driven recurrence while the v0.1 runtime

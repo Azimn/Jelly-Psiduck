@@ -106,3 +106,27 @@ This is an authored engineering scenario, not independent efficacy evidence.
 
 See [architecture](docs/ARCHITECTURE.md), [source provenance](docs/SOURCES.md),
 [research protocol](research/PROTOCOL.md), and [status](docs/STATUS.md).
+
+
+### Unscripted model efficacy harness
+
+A separate stacked research harness can evaluate an actual OpenAI-compatible model
+without changing the v0.2 organism. It freezes seven synthetic histories, records
+the exact telemetry-free subjective view seen on every model call, preserves every
+private output, and replays clean runs from those captured thoughts to verify the
+closed-loop trajectory exactly.
+
+A transport-free smoke run is:
+
+```bash
+python -m jelly_psiduck.model_evaluation --dry-run --output evidence/local-model-harness.json
+```
+
+A local model endpoint can be tested with:
+
+```bash
+python -m jelly_psiduck.model_evaluation --endpoint http://localhost:11434/v1 --model YOUR_MODEL --replicates 3 --output evidence/model-run.json
+```
+
+No endpoint URL or API key is stored in the evidence. See
+`research/MODEL_EFFICACY_PROTOCOL.md` before treating any live-model run as evidence.
