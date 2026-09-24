@@ -165,8 +165,20 @@ class SubjectContinuity:
         )
         self.state.epistemic_records.append(record)
         self.state.epistemic_records = self.state.epistemic_records[-self.record_limit :]
+        explicit_commitment = (
+            isinstance(metadata.get("commitment"), dict)
+            and bool(metadata["commitment"].get("description"))
+        )
+        explicit_resolution = (
+            isinstance(metadata.get("resolve_commitment"), dict)
+            and metadata["resolve_commitment"].get("id") in self.state.commitments
+        )
         self._apply_metadata(event, record)
-        self._apply_event_conventions(event, record)
+        if not (
+            (event.kind == "promise_made" and explicit_commitment)
+            or (event.kind in {"promise_kept", "promise_broken"} and explicit_resolution)
+        ):
+            self._apply_event_conventions(event, record)
         self._maybe_reflect(record)
         return record
 

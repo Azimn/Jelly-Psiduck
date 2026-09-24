@@ -310,6 +310,7 @@ class UnifiedSubject:
     def consequence(self, consequence: Consequence):
         with self._transaction():
             self.engine.apply_consequence(consequence)
+            self.continuity.advance_deadlines(self.engine.state.tick)
             self._add("action_consequence", self.engine._consequence_meaning(consequence),
                       concepts=consequence.tags)
 

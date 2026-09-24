@@ -254,3 +254,30 @@ def test_public_speech_does_not_copy_private_thought(tmp_path):
     assert data["engine"]["last_expression"] == result["speech"]
     assert any(r["source"] == "thought" and r["first_person"] == private
                for r in data["workspace"]["records"])
+
+
+def test_consequence_advances_deadlines_and_restart_preserves_status(tmp_path):
+    host = make(tmp_path)
+    host.enqueue(Event(
+        "promise",
+        "traveler",
+        "The traveler promised to return.",
+        tags=("traveler", "promise"),
+        metadata={"commitment": {
+            "id": "return",
+            "actor": "traveler",
+            "description": "The traveler promised to return.",
+            "due_tick": 1,
+            "importance": 1.0,
+        }},
+    ))
+    host.heartbeat()
+    assert host.inspect()["continuity"]["commitments"]["return"]["status"] == "open"
+
+    host.consequence(Consequence(Action.WAIT, "I kept waiting.", None, 0.0))
+    after = host.inspect()
+    assert after["engine"]["tick"] == 2
+    assert after["continuity"]["commitments"]["return"]["status"] == "overdue"
+
+    reopened = make(tmp_path)
+    assert reopened.inspect()["continuity"]["commitments"]["return"]["status"] == "overdue"

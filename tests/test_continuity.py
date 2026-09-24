@@ -131,3 +131,85 @@ def test_enhanced_host_persists_subject_continuity(tmp_path):
     )
     assert len(reopened.continuity.state.epistemic_records) == 1
     assert len(reopened.continuity.state.commitments) == 1
+
+
+def test_explicit_commitment_metadata_suppresses_fallback_convention():
+    continuity = SubjectContinuity()
+    continuity.observe(
+        Event(
+            "promise_made",
+            "jay",
+            "Jay promised to return.",
+            intensity=0.8,
+            tags=("jay", "promise"),
+            metadata={"commitment": {
+                "id": "return",
+                "actor": "jay",
+                "description": "Jay promised to return.",
+                "due_tick": 5,
+                "importance": 0.9,
+            }},
+        ),
+        tick=1,
+        interpretation="Jay has made a commitment to me.",
+    )
+
+    assert list(continuity.state.commitments) == ["return"]
+
+    continuity.observe(
+        Event(
+            "promise_kept",
+            "jay",
+            "Jay returned as promised.",
+            tags=("jay", "promise"),
+            metadata={"resolve_commitment": {
+                "id": "return",
+                "kept": True,
+                "outcome": "Jay returned as promised.",
+            }},
+        ),
+        tick=4,
+        interpretation="Jay followed through.",
+    )
+
+    assert list(continuity.state.commitments) == ["return"]
+    assert continuity.state.commitments["return"].status == "kept"
+
+
+def test_enhanced_host_recovers_continuity_from_atomic_snapshot(tmp_path):
+    cartridge = load_cartridge(ROOT / "cartridges" / "seed_subject.toml")
+    clock = lambda: 1000.0
+    host = PersistentContinuityHost.open(
+        cartridge,
+        tmp_path / "subject.json",
+        runtime_path=tmp_path / "runtime.json",
+        continuity_path=tmp_path / "continuity.json",
+        clock=clock,
+        auto_catch_up=False,
+    )
+    host.observe(
+        Event(
+            "promise_made",
+            "jay",
+            "Jay promised to return.",
+            tags=("jay", "promise"),
+            metadata={"commitment": {
+                "id": "return",
+                "actor": "jay",
+                "description": "Jay promised to return.",
+                "due_tick": 5,
+            }},
+        )
+    )
+    host.continuity_path.write_text('{"schema_version": 1}', encoding="utf-8")
+
+    reopened = PersistentContinuityHost.open(
+        cartridge,
+        host.state_path,
+        runtime_path=host.runtime_path,
+        continuity_path=host.continuity_path,
+        clock=clock,
+        auto_catch_up=False,
+    )
+
+    assert list(reopened.continuity.state.commitments) == ["return"]

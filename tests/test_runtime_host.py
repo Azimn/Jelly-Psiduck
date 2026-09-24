@@ -128,3 +128,29 @@ def test_mark_seen_moves_only_inspection_cursor(tmp_path):
 
     assert host.runtime.last_seen_tick == host.engine.state.tick
     assert json.dumps(host.engine.state.to_dict(), sort_keys=True) == subject_before
+
+
+def test_atomic_snapshot_is_authoritative_over_partial_legacy_mirrors(tmp_path):
+    clock = Clock()
+    host = make_host(tmp_path, clock)
+    host.set_room(noise=0.8, name="Workshop")
+    host.run_ticks(2)
+    expected_tick = host.engine.state.tick
+    expected_room = host.world.state.to_dict()
+
+    assert host.snapshot_path.exists()
+    host.state_path.write_text("{}", encoding="utf-8")
+    host.runtime_path.write_text('{"last_wall_time": 0}', encoding="utf-8")
+
+    reopened = PersistentOrganismHost.open(
+        host.cartridge,
+        host.state_path,
+        runtime_path=host.runtime_path,
+        clock=clock,
+        tick_seconds=60.0,
+        max_catchup_ticks=12,
+        auto_catch_up=False,
+    )
+
+    assert reopened.engine.state.tick == expected_tick
+    assert reopened.world.state.to_dict() == expected_room

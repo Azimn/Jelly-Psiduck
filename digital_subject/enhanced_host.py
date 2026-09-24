@@ -61,7 +61,13 @@ class PersistentContinuityHost(PersistentOrganismHost):
         )
         resolved_path = Path(continuity_path) if continuity_path is not None else Path(state_path).with_suffix(".continuity.json")
         raw: dict[str, Any] = {}
-        if resolved_path.exists():
+        snapshot_path = Path(str(state_path) + ".snapshot.json")
+        if snapshot_path.exists():
+            snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+            extra = snapshot.get("extra", {})
+            if isinstance(extra, dict):
+                raw = dict(extra.get("continuity", {}))
+        elif resolved_path.exists():
             raw = json.loads(resolved_path.read_text(encoding="utf-8"))
         host = cls(
             base.engine,
@@ -80,19 +86,16 @@ class PersistentContinuityHost(PersistentOrganismHost):
             host.catch_up(float(clock()))
         return host
 
-    def catch_up(self, now: float | None = None) -> CatchUpReport:
-        report = super().catch_up(now)
-        self.continuity.advance_deadlines(self.engine.state.tick)
-        self.save_continuity()
-        return report
+    def _snapshot_extra(self) -> dict[str, Any]:
+        if not hasattr(self, "continuity"):
+            return {}
+        return {"continuity": self.continuity.state.to_dict()}
 
-    def run_ticks(self, ticks: int) -> tuple[Experience, ...]:
-        result = super().run_ticks(ticks)
-        self.continuity.advance_deadlines(self.engine.state.tick)
-        self.save_continuity()
-        return result
+    def _before_save(self) -> None:
+        if hasattr(self, "continuity"):
+            self.continuity.advance_deadlines(self.engine.state.tick)
 
-    def observe(self, event: Event) -> ExpressionPacket:
+    def _before_observe(self, event: Event) -> None:
         self.continuity.advance_deadlines(self.engine.state.tick)
         influence = derive_continuity_influence(
             self.continuity,
@@ -106,7 +109,8 @@ class PersistentContinuityHost(PersistentOrganismHost):
         )
         self.last_continuity_influence = influence
 
-        packet = super().observe(event)
+    def _after_observe(self, event: Event, packet: ExpressionPacket) -> None:
+        influence = self.last_continuity_influence or ContinuityInfluence(source=event.kind)
         private = packet.private_content if isinstance(packet.private_content, dict) else {}
         private["continuity_influence"] = {
             "source": influence.source,
@@ -123,16 +127,15 @@ class PersistentContinuityHost(PersistentOrganismHost):
             evidence_ids=evidence,
         )
         self.continuity.advance_deadlines(self.engine.state.tick)
-        self.save_continuity()
-        return packet
 
     def save(self) -> None:
         super().save()
         if hasattr(self, "continuity"):
-            self.save_continuity()
+            try:
+                self._atomic_write_json(self.continuity_path, self.continuity.state.to_dict())
+            except OSError:
+                # The authoritative host snapshot already contains continuity.
+                pass
 
     def save_continuity(self) -> None:
-        self.continuity_path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = self.continuity_path.with_suffix(self.continuity_path.suffix + ".tmp")
-        temporary.write_text(json.dumps(self.continuity.state.to_dict(), indent=2), encoding="utf-8")
-        temporary.replace(self.continuity_path)
+        self.save()

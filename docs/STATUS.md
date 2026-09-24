@@ -32,3 +32,21 @@ rejected. No background daemon was installed or left running during development.
 Known limitations and next research work are in `ARCHITECTURE.md` and
 `research/PROTOCOL.md`. This is the initial executable architecture, not completion
 of every research hypothesis or a full natural-language companion product.
+
+
+## 2026-09-23: Post-review persistence and continuity hardening
+
+PR review hardening adds an authoritative single-file atomic snapshot for the
+legacy JSON host while retaining the old state/runtime/continuity files only as
+compatibility mirrors. Reopen prefers the atomic snapshot, preventing mixed
+generations after an interrupted mirror write.
+
+Continuity now treats explicit commitment metadata as authoritative over fallback
+promise conventions, so one trusted event cannot create duplicate commitments.
+Consequence-driven time advancement also advances continuity deadlines in the
+same SQLite transaction, including across restart.
+
+Regression coverage was added for all three cases. The frozen
+`evidence/inner-ear-v1.json` remains the original deterministic causal-loop
+evidence because these changes harden persistence and bookkeeping rather than
+altering the authored experimental intervention.

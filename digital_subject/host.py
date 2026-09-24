@@ -82,6 +82,7 @@ class PersistentOrganismHost:
         self.cartridge = cartridge
         self.state_path = Path(state_path)
         self.runtime_path = Path(runtime_path)
+        self.snapshot_path = Path(str(self.state_path) + ".snapshot.json")
         self.clock = clock
         self.tick_seconds = float(tick_seconds)
         self.max_catchup_ticks = int(max_catchup_ticks)
@@ -108,17 +109,24 @@ class PersistentOrganismHost:
         runtime_path = Path(runtime_path) if runtime_path is not None else state_path.with_suffix(".runtime.json")
         now = float(clock())
 
-        if state_path.exists():
-            try:
-                engine = SubjectEngine.load(state_path, cartridge)
-            except TypeError:
-                engine = SubjectEngine.load(state_path)
-        else:
-            engine = SubjectEngine.from_cartridge(cartridge, subject_id)
-
+        snapshot_path = Path(str(state_path) + ".snapshot.json")
         raw_runtime: dict[str, Any] = {}
-        if runtime_path.exists():
-            raw_runtime = json.loads(runtime_path.read_text(encoding="utf-8"))
+        if snapshot_path.exists():
+            snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+            if int(snapshot.get("schema_version", 0)) != 1:
+                raise ValueError("unsupported persistent host snapshot schema")
+            engine = SubjectEngine.from_dict(dict(snapshot["engine"]), cartridge)
+            raw_runtime = dict(snapshot.get("runtime", {}))
+        else:
+            if state_path.exists():
+                try:
+                    engine = SubjectEngine.load(state_path, cartridge)
+                except TypeError:
+                    engine = SubjectEngine.load(state_path)
+            else:
+                engine = SubjectEngine.from_cartridge(cartridge, subject_id)
+            if runtime_path.exists():
+                raw_runtime = json.loads(runtime_path.read_text(encoding="utf-8"))
         runtime = RuntimeState.from_dict(raw_runtime, now)
         resolved_tick_seconds = float(tick_seconds if tick_seconds is not None else raw_runtime.get("tick_seconds", 300.0))
         resolved_max_catchup = int(max_catchup_ticks if max_catchup_ticks is not None else raw_runtime.get("max_catchup_ticks", 288))
@@ -197,8 +205,10 @@ class PersistentOrganismHost:
 
     def observe(self, event: Event) -> ExpressionPacket:
         with self._lock:
+            self._before_observe(event)
             self.world.apply_to(self.engine)
             packet = self.engine.step(event)
+            self._after_observe(event, packet)
             self.runtime.world = self.world.state.to_dict()
             self.runtime.last_wall_time = float(self.clock())
             self.save()
@@ -221,21 +231,47 @@ class PersistentOrganismHost:
 
     def save(self) -> None:
         with self._lock:
-            self.state_path.parent.mkdir(parents=True, exist_ok=True)
-            self.runtime_path.parent.mkdir(parents=True, exist_ok=True)
-            state_tmp = self.state_path.with_suffix(self.state_path.suffix + ".tmp")
-            runtime_tmp = self.runtime_path.with_suffix(self.runtime_path.suffix + ".tmp")
-            self.engine.save(state_tmp)
-            runtime_tmp.write_text(json.dumps(self._runtime_payload(), indent=2), encoding="utf-8")
-            state_tmp.replace(self.state_path)
-            runtime_tmp.replace(self.runtime_path)
+            self._before_save()
+            snapshot = self._snapshot_payload()
+            # This single file is authoritative. The historical JSON files below
+            # remain compatibility mirrors only, so a crash cannot pair generations.
+            self._atomic_write_json(self.snapshot_path, snapshot)
+            try:
+                self._atomic_write_json(self.state_path, snapshot["engine"])
+                self._atomic_write_json(self.runtime_path, snapshot["runtime"])
+            except OSError:
+                # Recovery always prefers the already-committed authoritative snapshot.
+                pass
 
     def save_runtime(self) -> None:
-        with self._lock:
-            self.runtime_path.parent.mkdir(parents=True, exist_ok=True)
-            runtime_tmp = self.runtime_path.with_suffix(self.runtime_path.suffix + ".tmp")
-            runtime_tmp.write_text(json.dumps(self._runtime_payload(), indent=2), encoding="utf-8")
-            runtime_tmp.replace(self.runtime_path)
+        self.save()
+
+    def _snapshot_payload(self) -> dict[str, Any]:
+        return {
+            "schema_version": 1,
+            "engine": self.engine.state.to_dict(),
+            "runtime": self._runtime_payload(),
+            "extra": self._snapshot_extra(),
+        }
+
+    def _snapshot_extra(self) -> dict[str, Any]:
+        return {}
+
+    def _before_observe(self, event: Event) -> None:
+        return None
+
+    def _after_observe(self, event: Event, packet: ExpressionPacket) -> None:
+        return None
+
+    def _before_save(self) -> None:
+        return None
+
+    @staticmethod
+    def _atomic_write_json(path: Path, payload: dict[str, Any]) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = Path(str(path) + ".tmp")
+        temporary.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        temporary.replace(path)
 
     def _runtime_payload(self) -> dict[str, Any]:
         self.runtime.world = self.world.state.to_dict()
