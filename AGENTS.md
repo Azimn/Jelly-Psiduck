@@ -31,3 +31,13 @@ Verification: `python -m pytest -q` and
 For v0.2 also run `python -m jelly_psiduck.endogenous_evaluation --output evidence/local-v02.json`.
 
 For the stacked efficacy harness also run `python -m jelly_psiduck.model_evaluation --dry-run --case unresolved-mara --case body-hunger --ticks 8 --output evidence/local-model-harness.json`.
+
+
+For v0.3 idle-reverie work also read `docs/ARCHITECTURE_V03.md` and
+`research/V03_PROTOCOL.md`. Keep it separate from the lived-history/Pretorius
+experiment in PR #4: do not import persona-specific history artifacts, schema-3
+lived-history state, chronology or renderer changes into the v0.3 branch. v0.3
+uses schema 4 and a separate database.
+
+Verification for v0.3 additionally includes
+`python -m jelly_psiduck.v03_evaluation --output evidence/local-v03.json`.

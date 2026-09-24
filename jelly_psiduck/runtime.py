@@ -157,6 +157,14 @@ class UnifiedSubject:
     def _add(self, source, text, **metadata):
         return self.workspace.add(self.engine.state.tick, source, text, **metadata)
 
+    def _cognitive_view(self):
+        """Detached provider view; subclasses may change selection, never contents."""
+        return self.workspace.view()
+
+    def _after_cognition_opportunity(self, warranted, thought_ids):
+        """Optional lifecycle hook. Base architectures deliberately do nothing."""
+        return None
+
     def _tick(self):
         state = self.engine.state
         self.engine.advance_body()
@@ -189,7 +197,7 @@ class UnifiedSubject:
         if warranted and (incoming or self.config.autonomous_cognition):
             for _ in range(self.config.max_thoughts):
                 try:
-                    thought = self.cognition.think(self.workspace.view())
+                    thought = self.cognition.think(self._cognitive_view())
                 except Exception as exc:
                     self._trace({"kind": "cognition_error", "error_type": type(exc).__name__})
                     break
@@ -209,6 +217,7 @@ class UnifiedSubject:
                     break
                 self._hear(item)
 
+        self._after_cognition_opportunity(warranted, tuple(thought_ids))
         action = self.engine.select_conduct(last_event)
         speech = None
         # Only explicitly selected communicative conduct can be rendered. A thought

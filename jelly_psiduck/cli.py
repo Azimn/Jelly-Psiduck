@@ -20,8 +20,8 @@ def main():
     parser.add_argument("--cartridge", type=Path, default=DEFAULT_CARTRIDGE)
     parser.add_argument("--endpoint", help="Optional OpenAI-compatible API base URL (including /v1)")
     parser.add_argument("--model", help="Model name; required with --endpoint")
-    parser.add_argument("--architecture", choices=("v01", "v02"), default="v01",
-                        help="v02 is an opt-in experiment and requires a separate subject store")
+    parser.add_argument("--architecture", choices=("v01", "v02", "v03"), default="v01",
+                        help="v02/v03 are opt-in experiments and require separate subject stores")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("init")
     commands.add_parser("status", help="Read-only engine telemetry and private experience inspector")
@@ -40,7 +40,10 @@ def main():
     if args.command == "tick" and not 1 <= args.count <= 10000:
         parser.error("count must be between 1 and 10000")
     provider = OpenAICompatibleCognition(args.endpoint, args.model, os.environ.get("JELLY_API_KEY", "")) if args.endpoint else None
-    if args.architecture == "v02":
+    if args.architecture == "v03":
+        from .v03 import ReverieSubject
+        runtime_type = ReverieSubject
+    elif args.architecture == "v02":
         from .endogenous import EndogenousSubject
         runtime_type = EndogenousSubject
     else:

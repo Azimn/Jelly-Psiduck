@@ -1,5 +1,16 @@
 # Status
 
+## v0.3 candidate branch: idle reverie
+
+A separate v0.3 candidate is under development from the generic v0.2
+model-efficacy head. It does not include PR #4's lived-history/Pretorius treatment.
+The predeclared protocol is in `research/V03_PROTOCOL.md`; architecture details
+are in `docs/ARCHITECTURE_V03.md`, with results in `research/V03_RESULTS.md`.
+Python 3.11 and 3.12 CI are green, including the v0.1/v0.2 regressions, frozen
+model-harness dry run, unit suite and deterministic v0.3 evaluation.
+
+# Status
+
 ## Stacked model-efficacy harness
 
 A separate candidate branch now freezes a synthetic unscripted-provider protocol,
