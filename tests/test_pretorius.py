@@ -7,7 +7,7 @@ import pytest
 from digital_subject.cartridge import load_cartridge
 from jelly_psiduck.endogenous import EndogenousSubject
 from jelly_psiduck.history import seed_history
-from jelly_psiduck.pretorius import DEFAULT_CARTRIDGE, DEFAULT_HISTORY, open_pretorius
+from jelly_psiduck.pretorius import DEFAULT_CARTRIDGE, DEFAULT_HISTORY, PretoriusSubject, open_pretorius
 
 
 class CapturingRenderer:
@@ -28,7 +28,7 @@ def test_history_import_is_persisted_and_idempotent(tmp_path):
     snapshot = host.inspect()
     assert "pretorius-lived-history-v1" in snapshot["history_imports"]
     assert snapshot["engine"]["relationships"]["Jay"]["familiarity"] == pytest.approx(.95)
-    assert snapshot["engine"]["memory_count"] if "memory_count" in snapshot["engine"] else len(snapshot["engine"]["memories"]) == 34
+    assert len(snapshot["engine"]["memories"]) == 34
 
     reopened, second = open_pretorius(tmp_path / "pretorius.db")
     assert second["already_present"] is True
@@ -65,7 +65,7 @@ def test_history_keeps_source_classes_distinct(tmp_path):
 def test_model_renderer_receives_no_engine_telemetry_and_cannot_choose_conduct(tmp_path):
     cartridge = load_cartridge(DEFAULT_CARTRIDGE)
     renderer = CapturingRenderer()
-    host = EndogenousSubject(
+    host = PretoriusSubject(
         tmp_path / "pretorius.db",
         cartridge,
         renderer=renderer,
@@ -104,7 +104,7 @@ def test_history_import_rejects_changed_artifact_after_seed(tmp_path):
 
 def test_history_import_requires_fresh_subject(tmp_path):
     cartridge = load_cartridge(DEFAULT_CARTRIDGE)
-    host = EndogenousSubject(tmp_path / "pretorius.db", cartridge, subject_id="pretorius-001")
+    host = PretoriusSubject(tmp_path / "pretorius.db", cartridge, subject_id="pretorius-001")
     host.message("Jay", "Hello.")
     host.heartbeat()
 
