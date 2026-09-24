@@ -49,6 +49,8 @@ def concepts(text):
 
 class UnifiedSubject:
     SCHEMA = 1
+    CONFIG_TYPE = ExperimentConfig
+    ENGINE_TYPE = Organism
 
     def __init__(self, path: str | Path, cartridge: Cartridge, *, cognition=None,
                  config: ExperimentConfig | None = None, subject_id="subject-001"):
@@ -56,10 +58,10 @@ class UnifiedSubject:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.cartridge = cartridge
         self.cognition = cognition if cognition is not None else ReflectiveCognition()
-        self.config = config or ExperimentConfig()
+        self.config = config or self.CONFIG_TYPE()
         self.fingerprint = hashlib.sha256(json.dumps(asdict(cartridge), sort_keys=True).encode()).hexdigest()
         self._lock = threading.RLock()
-        self.engine = Organism.from_cartridge(cartridge, subject_id)
+        self.engine = self.ENGINE_TYPE.from_cartridge(cartridge, subject_id)
         self.continuity = SubjectContinuity()
         self.workspace = SubjectiveWorkspace()
         self.workspace.add(0, "memory", f"I know myself as {cartridge.display_name}. "
@@ -92,8 +94,8 @@ class UnifiedSubject:
     def _restore(self, raw):
         if raw["schema"] != self.SCHEMA or raw["cartridge"] != self.fingerprint:
             raise ValueError("unsupported schema or changed cartridge; explicit migration required")
-        self.config = ExperimentConfig(**raw["config"])
-        self.engine = Organism.from_dict(raw["engine"], self.cartridge)
+        self.config = self.CONFIG_TYPE(**raw["config"])
+        self.engine = self.ENGINE_TYPE.from_dict(raw["engine"], self.cartridge)
         self.continuity = SubjectContinuity(ContinuityState.from_dict(raw["continuity"]))
         self.workspace = SubjectiveWorkspace.from_dict(raw["workspace"])
         self.pending = raw["pending"]
@@ -160,14 +162,7 @@ class UnifiedSubject:
         self.engine.advance_body()
         self.continuity.advance_deadlines(state.tick)
         start = self.workspace.sequence
-        fresh_body = False
-        for key, text, urgency in body_experiences(state):
-            if self.noticed.get(key) != text:
-                self._add("interoception", text, salience=urgency, intensity=urgency, concepts=(key,))
-                fresh_body = True
-            self.noticed[key] = text
-        active = {key for key, _, _ in body_experiences(state)}
-        self.noticed = {k: v for k, v in self.noticed.items() if k in active}
+        fresh_body = self._project_body()
 
         last_event = None
         incoming, self.pending = self.pending[:8], self.pending[8:]
@@ -187,33 +182,9 @@ class UnifiedSubject:
             for memory in self.engine._memories_by_ids(links):
                 self._add("memory", remembered(memory), memory_links=(memory.id,), generated_by=item.id)
 
-        temporal = False
-        for commitment in self.continuity.state.commitments.values():
-            if commitment.status != "overdue":
-                continue
-            key = f"deadline:{commitment.id}"
-            if key in self.cooldowns:
-                continue
-            self.cooldowns[key] = state.tick
-            self._add("temporal", f"The time I expected has passed: {commitment.description}",
-                      concepts=(commitment.actor,), concern_links=(commitment.id,))
-            temporal = True
-        for expectation in self.continuity.state.expectations.values():
-            key = f"expectation:{expectation.id}"
-            if expectation.status == "expired" and key not in self.cooldowns:
-                self.cooldowns[key] = state.tick
-                self._add("temporal", f"I still have no confirmation of what I expected: {expectation.proposition}",
-                          expectation_links=(expectation.id,))
-                temporal = True
+        temporal = self._project_temporal()
 
-        # Salient transitions and sparse revisits warrant cognition; quiet body
-        # evolution does not require a sentence or a model call on every tick.
-        revisit = state.tick % 6 == 0 and (bool(self.attention) or any(
-            c.status == "overdue" for c in self.continuity.state.commitments.values()))
-        if revisit and self.attention and self.config.memory_feedback:
-            for memory in self.engine.recall(self.attention):
-                self._add("memory", remembered(memory), memory_links=(memory.id,), generated_by="attention")
-        warranted = bool(incoming) or fresh_body or temporal or revisit
+        warranted = self._warrants_cognition(incoming, fresh_body, temporal)
         thought_ids = []
         if warranted and (incoming or self.config.autonomous_cognition):
             for _ in range(self.config.max_thoughts):
@@ -258,6 +229,54 @@ class UnifiedSubject:
         self._trace({"kind": "heartbeat", "action": action.value, "thoughts": thought_ids,
                      "experience_count": self.workspace.sequence - start, "speech": speech})
         return {"tick": state.tick, "action": action.value, "speech": speech, "thoughts": thought_ids}
+
+    def _project_body(self):
+        state = self.engine.state
+        fresh_body = False
+        for key, text, urgency in body_experiences(state):
+            if self.noticed.get(key) != text:
+                self._add("interoception", text, salience=urgency, intensity=urgency, concepts=(key,))
+                fresh_body = True
+            self.noticed[key] = text
+        active = {key for key, _, _ in body_experiences(state)}
+        self.noticed = {k: v for k, v in self.noticed.items() if k in active}
+
+        return fresh_body
+
+    def _project_temporal(self):
+        state = self.engine.state
+        temporal = False
+        for commitment in self.continuity.state.commitments.values():
+            if commitment.status != "overdue":
+                continue
+            key = f"deadline:{commitment.id}"
+            if key in self.cooldowns:
+                continue
+            self.cooldowns[key] = state.tick
+            self._add("temporal", f"The time I expected has passed: {commitment.description}",
+                      concepts=(commitment.actor,), concern_links=(commitment.id,))
+            temporal = True
+        for expectation in self.continuity.state.expectations.values():
+            key = f"expectation:{expectation.id}"
+            if expectation.status == "expired" and key not in self.cooldowns:
+                self.cooldowns[key] = state.tick
+                self._add("temporal", f"I still have no confirmation of what I expected: {expectation.proposition}",
+                          expectation_links=(expectation.id,))
+                temporal = True
+
+        return temporal
+
+    def _warrants_cognition(self, incoming, fresh_body, temporal):
+        state = self.engine.state
+        # Salient transitions and sparse revisits warrant cognition; quiet body
+        # evolution does not require a sentence or a model call on every tick.
+        revisit = state.tick % 6 == 0 and (bool(self.attention) or any(
+            c.status == "overdue" for c in self.continuity.state.commitments.values()))
+        if revisit and self.attention and self.config.memory_feedback:
+            for memory in self.engine.recall(self.attention):
+                self._add("memory", remembered(memory), memory_links=(memory.id,), generated_by="attention")
+        warranted = bool(incoming) or fresh_body or temporal or revisit
+        return warranted
 
     def _hear(self, thought):
         tokens = concepts(thought.first_person)

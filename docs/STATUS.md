@@ -1,5 +1,25 @@
 # Status
 
+## v0.2 candidate: unattended endogenous cognition
+
+Opt-in schema-2 SQLite runtime adds state-driven recurrence while the v0.1 runtime
+and frozen evidence remain available. See `ARCHITECTURE_V02.md` and
+`research/V02_RESULTS.md` for contracts, evidence and limitations.
+
+Local Python 3.11: **76 tests passed**. The four-history/eight-arm, 24-tick
+unattended experiment passes all 13 checks, including split-run restart equality.
+The original v1 evaluation rerun is exactly equal to its frozen JSON. These are
+deterministic development experiments using a stateless template provider; no
+actual-model or independent efficacy claim is made.
+
+Validation also includes the v0.2 CLI demo and unattended ticks, a built
+`0.2.0a1` wheel, and an isolated wheel demo outside the checkout using Python `-I`.
+
+The five fresh v0.1 review fixes were delivered separately in `9a7945c`; that head
+passed Python 3.11 and 3.12 CI. v0.2 is a separate candidate branch and does not
+merge PR #1 or alter its feature scope. No subject was silently migrated and no
+background process was installed.
+
 ## Final v0.1 review hardening
 
 The fresh review of `30923a1` identified five additional defects. Regression-tested

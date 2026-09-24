@@ -20,6 +20,8 @@ def main():
     parser.add_argument("--cartridge", type=Path, default=DEFAULT_CARTRIDGE)
     parser.add_argument("--endpoint", help="Optional OpenAI-compatible API base URL (including /v1)")
     parser.add_argument("--model", help="Model name; required with --endpoint")
+    parser.add_argument("--architecture", choices=("v01", "v02"), default="v01",
+                        help="v02 is an opt-in experiment and requires a separate subject store")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("init")
     commands.add_parser("status", help="Read-only engine telemetry and private experience inspector")
@@ -38,7 +40,12 @@ def main():
     if args.command == "tick" and not 1 <= args.count <= 10000:
         parser.error("count must be between 1 and 10000")
     provider = OpenAICompatibleCognition(args.endpoint, args.model, os.environ.get("JELLY_API_KEY", "")) if args.endpoint else None
-    host = UnifiedSubject(args.db, load_cartridge(args.cartridge), cognition=provider)
+    if args.architecture == "v02":
+        from .endogenous import EndogenousSubject
+        runtime_type = EndogenousSubject
+    else:
+        runtime_type = UnifiedSubject
+    host = runtime_type(args.db, load_cartridge(args.cartridge), cognition=provider)
     if args.command == "status":
         print(json.dumps(host.inspect(), indent=2))
     elif args.command == "init":

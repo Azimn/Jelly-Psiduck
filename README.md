@@ -14,6 +14,13 @@ This is an executable research prototype, not evidence of phenomenal consciousne
 The first release demonstrates a narrow causal loop; the broader hypothesis still
 requires independent experiments and richer histories.
 
+An opt-in [v0.2 endogenous-cognition candidate](docs/ARCHITECTURE_V02.md) now adds
+graded interoception, unresolved-concern recurrence, associative memory drift,
+deferred thought input, bounded discourse interpretation, and independent memory
+versus prospective feedback. Use `--architecture v02` with a **new database**;
+the default v0.1 apparatus remains available. See the [development results](research/V02_RESULTS.md)
+for the four-history/eight-arm unattended experiment and its limitations.
+
 ```text
 world / messages / time
           |
