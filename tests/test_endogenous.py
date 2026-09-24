@@ -107,7 +107,10 @@ def test_interpreter_resolves_paraphrase_but_not_ambiguous_referent():
     assert meaning.modality == "uncertain" and meaning.support == ("experience-1",)
     assert not interpret("Maybe she is delayed.", {"Mara": ("a",), "Ivo": ("b",)}).actors
     assert not interpret("The sky is blue.", {"Mara": ("a",)}).actors
+    assert not interpret("I should check the stove.", {"Mara": ("a",)}).actors
+    assert not interpret("Maybe the train is delayed.", {"Mara": ("a",)}).actors
     assert interpret("She is not back.", {"Mara": ("a",)}).modality == "negated_or_uncertain"
+    assert interpret("She hasn't returned.", {"Mara": ("a",)}).modality == "negated_or_uncertain"
 
 
 def test_semantic_reference_changes_effect_without_literal_actor_name(tmp_path):

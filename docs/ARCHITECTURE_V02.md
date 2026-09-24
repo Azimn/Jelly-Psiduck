@@ -55,9 +55,11 @@ activation and all exposure records are persisted in the same subject transactio
 
 **Interpretation.** `semantics.interpret` is a bounded English discourse grammar.
 It annotates inquiry/anticipation/concern/recall and uncertainty/negation, and can
-resolve pronouns or an omitted subject when exactly one actor is grounded in the
-currently visible experience. Ambiguous references fail closed. The literal-only
-ablation cannot resolve the same nameless thought. These annotations do not turn
+resolve an explicit personal pronoun when exactly one actor is grounded in the
+currently visible experience. Elliptical omitted subjects fail closed because an
+instruction such as "I should check the stove" must not inherit the only visible
+person merely from discourse position. Ambiguous references fail closed. The
+literal-only ablation cannot resolve the same pronoun thought. These annotations do not turn
 "she returned" into observation or resolution. This is beyond literal name matching
 for the demonstrated cases, but is not general semantic understanding or an LLM
 semantic judge. Multilingual interpretation, complex negation, topic shifts and

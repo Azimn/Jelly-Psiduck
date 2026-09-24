@@ -62,3 +62,18 @@ The next efficacy experiment should freeze broader histories and distractors,
 use actual model providers, score grounding and causal relevance independently
 of prose quality, and include more than one linguistic interpreter. Do not tune
 on these cases and later describe them as untouched holdouts.
+
+
+## Post-candidate semantic hardening
+
+A manual review found that the first bounded interpreter treated any non-recall
+utterance as an omitted-subject reference when exactly one actor was visible.
+That could incorrectly ground unrelated language such as "I should check the
+stove" onto that actor. The candidate now fails closed for elliptical omitted
+subjects and inherits a sole discourse actor only from an explicit personal
+pronoun. Negation detection also covers ordinary English contractions such as
+"hasn't" without treating the affirmative word "can" as negation.
+
+This narrows the demonstrated reference mechanism rather than expanding the
+claim. The existing pronoun case remains supported; general ellipsis and
+coreference remain future work.
