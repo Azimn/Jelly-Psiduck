@@ -15,3 +15,28 @@ def test_pretorius_live_dry_run_is_replayable_and_not_evidence():
     assert report["checks"]["clean_trials_replay_exactly"]
     assert report["harness_valid"]
     assert report["evidence_eligible"] is False
+
+
+def test_pretorius_dynamic_memory_ids_are_deterministic(tmp_path):
+    from digital_subject.cartridge import load_cartridge
+    from jelly_psiduck.pretorius import DEFAULT_CARTRIDGE, PretoriusSubject
+
+    cartridge = load_cartridge(DEFAULT_CARTRIDGE)
+    ids = []
+    for name in ("a.db", "b.db"):
+        host = PretoriusSubject(
+            tmp_path / name,
+            cartridge,
+            subject_id="pretorius-001",
+        )
+        host.message("Jay", "A deterministic replay probe.")
+        host.heartbeat()
+        ids.append([
+            memory["id"]
+            for memory in host.inspect()["engine"]["memories"]
+            if not memory["kind"].startswith("history:")
+        ])
+
+    assert ids[0] == ids[1]
+    assert ids[0]
+    assert all(item.startswith("pretorius-001:memory:") for item in ids[0])

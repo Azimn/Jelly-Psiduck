@@ -34,7 +34,13 @@ The Pretorius RC uses a subject-specific capacity contract of 512 stored memorie
 2,048 semantic associations, and top-k 4 retrieval. The generic v0.2 organism keeps
 its smaller frozen defaults. The larger association budget is necessary because the
 47-memory v2 artifact currently contains 532 distinct semantic tag-pairs before any
-new lived experience is added. Changing these Pretorius resource limits after the
+new lived experience is added.
+
+New Pretorius memories acquired after initialization use deterministic subject-local
+sequence identifiers. Seeded history identifiers remain unchanged. This makes exact
+live-versus-replay snapshots meaningful without changing the frozen generic v0.2
+engine, whose donor implementation uses random UUIDs for newly stored memories.
+Changing these Pretorius resource limits or dynamic-memory identity rules after the
 first accepted result requires a new protocol version.
 
 ## Model and response contracts

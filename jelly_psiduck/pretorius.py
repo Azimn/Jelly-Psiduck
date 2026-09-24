@@ -68,6 +68,25 @@ class PretoriusOrganism(EndogenousOrganism):
             association_limit=association_limit,
             top_k=top_k,
         )
+        prefix = self._dynamic_memory_prefix()
+        sequences = []
+        for memory in self.state.memories:
+            if not memory.id.startswith(prefix):
+                continue
+            suffix = memory.id[len(prefix):]
+            if suffix.isdigit():
+                sequences.append(int(suffix))
+        self._memory_sequence = max(sequences, default=0)
+
+    def _dynamic_memory_prefix(self):
+        return f"{self.state.subject_id}:memory:"
+
+    def _store_memory(self, memory):
+        """Give newly acquired Pretorius memories deterministic replay-stable IDs."""
+        if not memory.kind.startswith("history:"):
+            self._memory_sequence += 1
+            memory.id = f"{self._dynamic_memory_prefix()}{self._memory_sequence:08d}"
+        super()._store_memory(memory)
 
 
 class PretoriusSubject(EndogenousSubject):
