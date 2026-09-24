@@ -237,15 +237,15 @@ class PretoriusV03Subject(PretoriusSubject):
                 if index < len(perceived)
                 else self.engine.state.current_experience
             )
+            metadata = raw.get("metadata") or {}
             objective = (
                 f"{source} said: {description}"
                 if event_type == "message"
-                else description
+                else str(metadata.get("objective_record") or description)
             )
             participants = ()
             if source not in {"world", "environment", "system", "self"}:
                 participants = (source,)
-            metadata = raw.get("metadata") or {}
             person_id = str(metadata.get("person_id", "")).strip()
             if person_id and person_id not in participants:
                 participants = (*participants, person_id)
@@ -284,11 +284,37 @@ class PretoriusV03Subject(PretoriusSubject):
 
     def _protected_ids(self) -> set[str]:
         protected = set(self.protected_memory_ids)
+        active_ids = {memory.id for memory in self.engine.state.memories}
+        records = {
+            record.id: record
+            for record in self.continuity.state.epistemic_records
+        }
+
+        def protect_evidence(evidence_ids):
+            pending = list(evidence_ids)
+            seen = set()
+            while pending:
+                evidence_id = str(pending.pop())
+                if evidence_id in seen:
+                    continue
+                seen.add(evidence_id)
+                if evidence_id in active_ids:
+                    protected.add(evidence_id)
+                record = records.get(evidence_id)
+                if record is not None:
+                    pending.extend(record.evidence_ids)
+
         for claim in self.engine.state.narrative.values():
-            protected.update(claim.evidence_memory_ids)
+            protect_evidence(claim.evidence_memory_ids)
+        for commitment in self.continuity.state.commitments.values():
+            if commitment.status in {"open", "overdue"}:
+                protect_evidence(commitment.evidence_ids)
+        for expectation in self.continuity.state.expectations.values():
+            if expectation.status in {"pending", "expired"}:
+                protect_evidence(expectation.source_record_ids)
         for record in self.workspace.records[-16:]:
             if record.concern_links or record.expectation_links:
-                protected.update(record.memory_links)
+                protect_evidence(record.memory_links)
         return protected
 
     def _source_event_ids(self, memory_id: str) -> tuple[str, ...]:
@@ -474,6 +500,12 @@ def open_pretorius_v03(
         if existing is None or existing.get("sha256") != history_digest:
             raise ValueError("existing schema-5 subject is pinned to a different history artifact")
         report = {**existing, "already_present": True}
+    elif host.migration_manifest is not None:
+        report = {
+            "history_id": None,
+            "already_present": True,
+            "migrated_without_typed_prehistory": True,
+        }
     else:
         report = seed_history(host, history_path)
     return host, report
