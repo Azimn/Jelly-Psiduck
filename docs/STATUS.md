@@ -1,5 +1,18 @@
 # Status
 
+
+### Subjective workspace design invariant
+
+Pretorius v0.3 now has a canonical subject-facing interface specification in
+`docs/PRETORIUS_SUBJECTIVE_WORKSPACE.md`. Mechanical state remains free to use the most
+appropriate internal representation, but information admitted to the swappable cognitive
+language model as experienced state must be transduced into egocentric first-person
+language with epistemic status preserved. Raw telemetry is not a valid subjective input.
+The document separates biological analogy from the substrate-specific LLM hypothesis,
+records the scientific rationale and limitations, and defines future raw-telemetry,
+third-person, fragmented-first-person, and coherent-first-person ablations. This is
+guidance and experimental design only; no consciousness or sentience claim is made.
+
 ## 0.3.0a1 Pretorius autobiographical substrate
 
 Pretorius v0.3 now develops on a schema-5 line branched from the accepted
