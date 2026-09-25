@@ -60,6 +60,34 @@ jelly-pretorius-v03 archive MEMORY_ID
 
 The existing `jelly-pretorius` command remains the schema-4 RC runtime. The existing `jelly-pretorius-study` command remains the frozen `pretorius-live-v1` study harness. Because the development package version is now `0.3.0a1`, the frozen v0.2 study harness cannot classify runs from this branch as release-matched v0.2 evidence.
 
+
+## Subjective workspace invariant
+
+The canonical guidance for Pretorius's subject-facing cognitive interface is
+[`docs/PRETORIUS_SUBJECTIVE_WORKSPACE.md`](PRETORIUS_SUBJECTIVE_WORKSPACE.md).
+
+Beginning with v0.3, this is a core experimental constraint rather than a style preference.
+Underlying systems may use numerical, graph, symbolic, learned, procedural, or other
+machine-efficient representations. Those representations are not Pretorius's experienced
+state. Any information admitted to the cognitive language model as current subjective
+content must first pass through a subjective-transduction boundary and arrive as an
+egocentric first-person linguistic representation appropriate to its provenance,
+uncertainty, temporality, and ownership.
+
+The cognitive model must not receive engine telemetry or raw internal control values as
+if those values were experiences. First-person workspace content must be causally upstream
+of model cognition and may affect later retrieval, appraisal, association, memory,
+intention, conduct, and inner-ear recurrence. Objective events, subjective renderings,
+and later interpretations remain distinct records.
+
+This rule is explicitly substrate-specific. The project does not claim that biological
+human consciousness requires verbal first-person narration. Pretorius uses a language
+model as a swappable cognitive organ, so the research question is whether a stable
+first-person linguistic interface is a useful integration surface for this different
+substrate. The invariant remains in force until a versioned ablation directly compares
+it against alternatives such as raw telemetry, third-person prose, and fragmented
+first-person representations.
+
 ## Determinism and claim boundary
 
 Given identical persisted state, identical incoming events, and identical captured model outputs, schema-5 state is intended to replay exactly. Autobiographical IDs, hashes, archive choices, consolidation actions, and migration mappings are deterministic.
