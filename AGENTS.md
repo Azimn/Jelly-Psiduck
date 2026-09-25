@@ -19,6 +19,19 @@ workspace orientation disabled, all four fixed 2x2 conditions, the fixed probe
 order, at least three replicates per condition, and an immutable model fingerprint.
 Do not relabel development or transport-diagnostic runs as evidence.
 
+
+For any Pretorius v0.3 or later work, read `docs/PRETORIUS_V03.md` and
+`docs/PRETORIUS_SUBJECTIVE_WORKSPACE.md` before changing architecture, prompts,
+workspace projection, cognition, memory, body/interoception, appraisal, relationships,
+or model-provider boundaries. The Subjective Workspace Invariant is a core experimental
+constraint: mechanical state may use any appropriate representation, but state admitted
+to the cognitive language model as Pretorius's experienced state must first be rendered
+as an egocentric first-person linguistic representation with epistemic status preserved.
+Never expose engine telemetry or raw mechanical control values to the cognitive model as
+experienced state. The first-person stream must be causally upstream of cognition, not
+decorative post-hoc narration. Do not silently remove or weaken this invariant; changes
+require a versioned ablation or protocol that directly tests the alternative.
+
 - Persona-and-Jelly remains the organism foundation and sole conduct authority.
 - The engine simulates the organism; the subject experiences the consequences.
 - Cognition receives only immutable subjective views, never engine telemetry.
